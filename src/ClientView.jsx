@@ -1,30 +1,48 @@
 import React, { useState } from 'react';
-import { Search, Star, MapPin, Heart, Image as ImageIcon, X, Home, Wallet, Gift, Sparkles, TrendingUp } from 'lucide-react';
+import { Calendar, Star, Heart, Sparkles, Search, MapPin, LogOut, Image as ImageIcon, TrendingUp, Wallet, Gift, Home } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
+import { signOutUser } from './services/auth';
+import { useNavigate } from 'react-router-dom';
 
 const ClientView = () => {
-  const [activeTab, setActiveTab] = useState('home'); // home, inspo, wallet
+  const [activeTab, setActiveTab] = useState('explorar'); // explorar, inspiracoes, fidelidade
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOutUser();
+    navigate('/');
+  };
 
   return (
-    <div style={{ width: '100%', maxWidth: '480px', margin: '0 auto', backgroundColor: 'var(--surface-color)', minHeight: '100vh', borderLeft: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)', position: 'relative' }}>
-      
-      {activeTab === 'home' && <HomeTab />}
-      {activeTab === 'inspo' && <InspoTab />}
-      {activeTab === 'wallet' && <WalletTab />}
+    <div className="app-container" style={{ maxWidth: '480px', margin: '0 auto', borderLeft: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)' }}>
+      {/* Top Header */}
+      <div style={{ padding: '1rem 1.5rem', backgroundColor: 'var(--surface-color)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--primary-color)' }}>Para Você</h1>
+        <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+          <LogOut size={20} />
+        </button>
+      </div>
 
-      {/* Bottom Nav */}
-      <nav style={{ position: 'fixed', bottom: 0, width: '100%', maxWidth: '480px', backgroundColor: 'var(--surface-color)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-around', padding: '1rem', zIndex: 10 }}>
-        <button onClick={() => setActiveTab('home')} style={{ color: activeTab === 'home' ? 'var(--primary-color)' : 'var(--text-light)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-          <Home size={24} />
-          <span style={{ fontSize: '0.7rem', fontWeight: 500 }}>Explorar</span>
+      {/* Main Content Area */}
+      <div className="app-content">
+        {activeTab === 'explorar' && <HomeTab />}
+        {activeTab === 'inspiracoes' && <InspoTab />}
+        {activeTab === 'fidelidade' && <WalletTab />}
+      </div>
+
+      {/* Bottom Navigation */}
+      <nav className="bottom-nav" style={{ maxWidth: '480px', margin: '0 auto' }}>
+        <button className={`bottom-nav-item ${activeTab === 'explorar' ? 'active' : ''}`} onClick={() => setActiveTab('explorar')}>
+          <Home size={22} />
+          <span>Explorar</span>
         </button>
-        <button onClick={() => setActiveTab('inspo')} style={{ color: activeTab === 'inspo' ? 'var(--primary-color)' : 'var(--text-light)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-          <Sparkles size={24} />
-          <span style={{ fontSize: '0.7rem', fontWeight: 500 }}>Inspirações</span>
+        <button className={`bottom-nav-item ${activeTab === 'inspiracoes' ? 'active' : ''}`} onClick={() => setActiveTab('inspiracoes')}>
+          <Sparkles size={22} />
+          <span>Inspirações</span>
         </button>
-        <button onClick={() => setActiveTab('wallet')} style={{ color: activeTab === 'wallet' ? 'var(--primary-color)' : 'var(--text-light)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-          <Wallet size={24} />
-          <span style={{ fontSize: '0.7rem', fontWeight: 500 }}>Fidelidade</span>
+        <button className={`bottom-nav-item ${activeTab === 'fidelidade' ? 'active' : ''}`} onClick={() => setActiveTab('fidelidade')}>
+          <Heart size={22} />
+          <span>Fidelidade</span>
         </button>
       </nav>
     </div>

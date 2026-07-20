@@ -1,40 +1,41 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, LogOut } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
+import { signOutUser } from './services/auth';
+import { useNavigate } from 'react-router-dom';
 
 const ProfessionalView = () => {
   const [activeTab, setActiveTab] = useState('agenda');
   const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOutUser();
+    navigate('/');
+  };
 
   return (
-    <>
-      <aside className="sidebar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '3rem' }}>
-          <Sparkles color="var(--primary-color)" size={28} />
-          <h2 style={{ fontSize: '1.5rem', margin: 0 }}>My Nails</h2>
+    <div className="app-container">
+      {/* Top Header */}
+      <div style={{ padding: '1rem 1.5rem', backgroundColor: 'var(--surface-color)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Sparkles color="var(--primary-color)" size={24} />
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--primary-color)' }}>My Nails Studio</h1>
         </div>
-        
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflowY: 'auto' }}>
-          <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0.5rem 0 0.25rem 1rem' }}>Gestão de Agendamento</p>
-          <NavItem active={activeTab === 'agenda'} onClick={() => setActiveTab('agenda')} icon={<CalendarIcon size={20} />} label="Agenda Inteligente" />
-          <NavItem active={activeTab === 'clientes'} onClick={() => setActiveTab('clientes')} icon={<Users size={20} />} label="Clientes & Anamnese" />
-          <NavItem active={activeTab === 'servicos'} onClick={() => setActiveTab('servicos')} icon={<Scissors size={20} />} label="Catálogo de Serviços" />
-          
-          <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '1rem 0 0.25rem 1rem' }}>Gestão de Negócio</p>
-          <NavItem active={activeTab === 'financeiro'} onClick={() => setActiveTab('financeiro')} icon={<DollarSign size={20} />} label="Controle Financeiro" />
-          <NavItem active={activeTab === 'estoque'} onClick={() => setActiveTab('estoque')} icon={<Package size={20} />} label="Estoque de Materiais" />
-          <NavItem active={activeTab === 'assinatura'} onClick={() => setActiveTab('assinatura')} icon={<Award size={20} />} label="Assinatura & Portfólio" />
-        </nav>
-      </aside>
+        <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+          <LogOut size={20} />
+        </button>
+      </div>
 
-      <main className="main-content">
-        <div className="top-bar">
+      {/* Main Content Area */}
+      <div className="app-content">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Olá, Marina 👋</h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Aqui está o resumo do seu estúdio.</p>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Olá, Marina 👋</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Resumo do seu estúdio.</p>
           </div>
-          <button className="btn btn-primary" onClick={() => setIsNewBookingOpen(true)}>
-            <Plus size={20} /> Novo Agendamento
+          <button className="btn btn-primary" onClick={() => setIsNewBookingOpen(true)} style={{ padding: '0.5rem 1rem' }}>
+            <Plus size={18} /> Novo
           </button>
         </div>
 
@@ -46,25 +47,34 @@ const ProfessionalView = () => {
         {activeTab === 'assinatura' && <AssinaturaView />}
 
         {isNewBookingOpen && <NewBookingModal onClose={() => setIsNewBookingOpen(false)} />}
-      </main>
-    </>
+      </div>
+
+      {/* Bottom Navigation */}
+      <nav className="bottom-nav">
+        <button className={`bottom-nav-item ${activeTab === 'agenda' ? 'active' : ''}`} onClick={() => setActiveTab('agenda')}>
+          <CalendarIcon size={22} />
+          <span>Agenda</span>
+        </button>
+        <button className={`bottom-nav-item ${activeTab === 'clientes' ? 'active' : ''}`} onClick={() => setActiveTab('clientes')}>
+          <Users size={22} />
+          <span>Clientes</span>
+        </button>
+        <button className={`bottom-nav-item ${activeTab === 'financeiro' ? 'active' : ''}`} onClick={() => setActiveTab('financeiro')}>
+          <DollarSign size={22} />
+          <span>Finanças</span>
+        </button>
+        <button className={`bottom-nav-item ${activeTab === 'estoque' ? 'active' : ''}`} onClick={() => setActiveTab('estoque')}>
+          <Package size={22} />
+          <span>Estoque</span>
+        </button>
+        <button className={`bottom-nav-item ${activeTab === 'assinatura' ? 'active' : ''}`} onClick={() => setActiveTab('assinatura')}>
+          <Award size={22} />
+          <span>Premium</span>
+        </button>
+      </nav>
+    </div>
   );
 };
-
-const NavItem = ({ active, icon, label, onClick }) => (
-  <button 
-    onClick={onClick}
-    style={{ 
-      display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', 
-      padding: '0.875rem 1rem', borderRadius: '12px', textAlign: 'left',
-      backgroundColor: active ? 'var(--secondary-color)' : 'transparent',
-      color: active ? 'white' : 'var(--text-secondary)',
-      fontWeight: active ? 500 : 400,
-    }}
-  >
-    {icon} {label}
-  </button>
-);
 
 /* ----- VIEWS ----- */
 
