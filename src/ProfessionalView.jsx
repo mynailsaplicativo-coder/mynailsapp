@@ -144,9 +144,14 @@ const ClientesView = () => {
 };
 
 const AnamneseForm = ({ onBack }) => {
+  const { isPremium } = useAppContext();
   const [recommendation, setRecommendation] = useState(null);
   const handleRecommend = (e) => {
     e.preventDefault();
+    if (!isPremium) {
+      alert("A Anamnese com Inteligência Artificial é exclusiva do Plano Premium!");
+      return;
+    }
     setRecommendation({ service: "Blindagem / Banho de Gel", reason: "Baseado no histórico de unhas fracas e desejo de manter o comprimento natural." });
   };
   return (
@@ -226,8 +231,10 @@ const ServicosView = () => {
 };
 
 const FinanceiroView = () => {
-  const { transactions, addTransaction } = useAppContext();
+  const { transactions, addTransaction, isPremium } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
+
+  if (!isPremium) return <PremiumLockView featureName="Controle Financeiro Completo" />;
 
   const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
   const totalExpense = transactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
@@ -287,8 +294,10 @@ const FinanceiroView = () => {
 };
 
 const EstoqueView = () => {
-  const { inventory, addMaterial } = useAppContext();
+  const { inventory, addMaterial, isPremium } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
+
+  if (!isPremium) return <PremiumLockView featureName="Controle Inteligente de Estoque" />;
 
   return (
     <div className="animate-in">
@@ -327,14 +336,53 @@ const EstoqueView = () => {
   );
 };
 
-const AssinaturaView = () => (
-  <div className="animate-in card" style={{ padding: '3rem', textAlign: 'center', background: 'linear-gradient(135deg, var(--secondary-color), #333)', color: 'white' }}>
-    <Award size={48} color="var(--primary-color)" style={{ margin: '0 auto 1rem' }} />
-    <h2 style={{ marginBottom: '1rem', color: 'white' }}>Plano Profissional</h2>
-    <p style={{ color: '#ccc', maxWidth: '500px', margin: '0 auto 2rem' }}>
-      Seu portfólio no topo das buscas do app cliente, confirmação automática de agenda via WhatsApp e relatórios avançados.
+const AssinaturaView = () => {
+  const { isPremium, upgradeToPremium } = useAppContext();
+  const [loading, setLoading] = useState(false);
+
+  const handleCheckout = async () => {
+    setLoading(true);
+    // Simula a chamada para a API do Asaas (que criamos no service)
+    // Na vida real: await createSubscription({...});
+    setTimeout(() => {
+      alert("Sucesso! O Asaas processou a assinatura. Você agora é Premium!");
+      upgradeToPremium();
+      setLoading(false);
+    }, 2000);
+  };
+
+  if (isPremium) return (
+    <div className="animate-in card" style={{ padding: '3rem', textAlign: 'center', background: 'linear-gradient(135deg, var(--success), #059669)', color: 'white' }}>
+      <Award size={48} color="white" style={{ margin: '0 auto 1rem' }} />
+      <h2 style={{ marginBottom: '1rem', color: 'white' }}>Você é Premium! 🌟</h2>
+      <p style={{ color: 'rgba(255,255,255,0.9)', maxWidth: '500px', margin: '0 auto' }}>
+        Seu portfólio está no topo das buscas, a confirmação automática está ativa e todos os relatórios estão desbloqueados.
+      </p>
+    </div>
+  );
+
+  return (
+    <div className="animate-in card" style={{ padding: '3rem', textAlign: 'center', background: 'linear-gradient(135deg, var(--secondary-color), #333)', color: 'white' }}>
+      <Award size={48} color="var(--primary-color)" style={{ margin: '0 auto 1rem' }} />
+      <h2 style={{ marginBottom: '1rem', color: 'white' }}>Plano Profissional</h2>
+      <p style={{ color: '#ccc', maxWidth: '500px', margin: '0 auto 2rem' }}>
+        Seu portfólio no topo das buscas do app cliente, confirmação automática de agenda via WhatsApp e relatórios avançados de financeiro e estoque.
+      </p>
+      <button className="btn btn-primary" onClick={handleCheckout} disabled={loading}>
+        {loading ? 'Processando Asaas...' : 'Ativar Premium (R$ 49,90/mês)'}
+      </button>
+    </div>
+  );
+};
+
+// Componente para bloquear telas de usuários grátis
+const PremiumLockView = ({ featureName }) => (
+  <div className="animate-in card" style={{ padding: '4rem 2rem', textAlign: 'center', border: '2px dashed var(--border-color)' }}>
+    <Award size={48} color="var(--primary-color)" style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+    <h2 style={{ marginBottom: '1rem' }}>Função Bloqueada</h2>
+    <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto 2rem' }}>
+      O <strong>{featureName}</strong> é uma funcionalidade exclusiva do Plano Premium. Assine para desbloquear todo o poder do My Nails!
     </p>
-    <button className="btn btn-primary">Ativar Premium (R$ 49,90/mês)</button>
   </div>
 );
 

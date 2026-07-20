@@ -1,34 +1,37 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AppProvider } from './context/AppContext';
+import Landing from './Landing';
+import Auth from './Auth';
 import ProfessionalView from './ProfessionalView';
 import ClientView from './ClientView';
-import { AppProvider } from './context/AppContext';
+import './App.css';
 
 function App() {
-  const [role, setRole] = useState('professional');
-
   return (
     <AppProvider>
-      <div className="app-layout">
+      <Routes>
+        {/* Rotas Públicas */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Auth isLogin={true} />} />
+        <Route path="/cadastro" element={<Auth isLogin={false} />} />
         
-        <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 100 }}>
-          <div className="role-switcher">
-            <button 
-              className={role === 'professional' ? 'active' : ''} 
-              onClick={() => setRole('professional')}
-            >
-              Visão da Profissional
-            </button>
-            <button 
-              className={role === 'client' ? 'active' : ''} 
-              onClick={() => setRole('client')}
-            >
-              Visão da Cliente
-            </button>
+        {/* Rotas Privadas (App) */}
+        <Route path="/app/pro" element={
+          <div className="app-container">
+            <ProfessionalView />
           </div>
-        </div>
+        } />
+        
+        <Route path="/app/cliente" element={
+          <div className="app-container" style={{ backgroundColor: 'white' }}>
+            <ClientView />
+          </div>
+        } />
 
-        {role === 'professional' ? <ProfessionalView /> : <ClientView />}
-      </div>
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </AppProvider>
   );
 }

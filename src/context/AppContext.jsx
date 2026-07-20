@@ -1,53 +1,101 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { 
+  fetchAppointments, insertAppointment, 
+  fetchServices, insertService,
+  fetchInventory, insertMaterial,
+  fetchTransactions, insertTransaction,
+  fetchClients, insertClient
+} from '../services/database';
+import { getSession } from '../services/auth';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  // Global state for Appointments
-  const [appointments, setAppointments] = useState([
-    { id: 1, time: '14:00', client: 'Juliana Paes', service: 'Banho de Gel + Nail Art', status: 'Confirmado' },
-    { id: 2, time: '15:30', client: 'Camila Silva', service: 'Manutenção Fibra de Vidro', status: 'Em andamento' },
-    { id: 3, time: '17:00', client: 'Bruna Marquezine', service: 'Esmaltação em Gel X', status: 'Aguardando' }
-  ]);
+  const [appointments, setAppointments] = useState([]);
+  const [services, setServices] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [clients, setClients] = useState([]);
+  
+  const [user, setUser] = useState(null);
+  const [isPremium, setIsPremium] = useState(false); // Fake profile premium status
+  const [loading, setLoading] = useState(true);
 
-  // Global state for Services Catalog
-  const [services, setServices] = useState([
-    { id: 1, category: 'Mãos', name: 'Manicure Tradicional', price: 35, duration: '45m' },
-    { id: 2, category: 'Mãos', name: 'Esmaltação em Gel', price: 60, duration: '1h' },
-    { id: 3, category: 'Mãos', name: 'Blindagem', price: 80, duration: '1h' },
-    { id: 4, category: 'Mãos', name: 'Alongamento Fibra de Vidro', price: 150, duration: '2h 30m' },
-    { id: 5, category: 'Pés', name: 'Spa dos Pés', price: 80, duration: '1h' },
-  ]);
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const session = await getSession();
+        if (session) {
+          setUser(session.user);
+          // Em um app real, buscaríamos o perfil do user para setar isPremium
+          // const profile = await fetchProfile(session.user.id);
+          // setIsPremium(profile.is_premium);
+        }
 
-  // Global state for Inventory
-  const [inventory, setInventory] = useState([
-    { id: 1, name: 'Gel Construtor Nude (Volia)', quantity: '1 pote', status: 'Baixo' },
-    { id: 2, name: 'Prep / Higienizador', quantity: '2 frascos', status: 'OK' },
-    { id: 3, name: 'Lixa Banana', quantity: '50 unid', status: 'OK' },
-  ]);
+        // Tenta buscar dados reais do Supabase (se as tabelas existirem)
+        // Se as tabelas estiverem vazias, retornará [] (sem dados mockados).
+        const [appts, svcs, inv, tx, cls] = await Promise.all([
+          fetchAppointments(),
+          fetchServices(),
+          fetchInventory(),
+          fetchTransactions(),
+          fetchClients()
+        ]);
 
-  // Global state for Finances
-  const [transactions, setTransactions] = useState([
-    { id: 1, type: 'income', description: 'Manutenção Fibra (Camila)', amount: 100, date: '2023-10-25' },
-    { id: 2, type: 'expense', description: 'Compra de Géis (Shopee)', amount: 150, date: '2023-10-24' },
-    { id: 3, type: 'income', description: 'Blindagem (Juliana)', amount: 80, date: '2023-10-25' },
-  ]);
+        setAppointments(appts || []);
+        
+        // Se a tabela de serviços estiver vazia no banco, podemos injetar alguns básicos
+        // mas o pedido foi remover os mocks. Então será array vazio até cadastrarem.
+        setServices(svcs || []);
+        
+        setInventory(inv || []);
+        setTransactions(tx || []);
+        setClients(cls || []);
+      } catch (err) {
+        console.error("Erro ao carregar dados da nuvem:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Global state for Clients
-  const [clients, setClients] = useState([
-    { id: 1, name: 'Juliana Paes', phone: '(11) 99999-9999', lastService: 'Banho de Gel', points: 3 },
-    { id: 2, name: 'Camila Silva', phone: '(11) 98888-8888', lastService: 'Manutenção Fibra', points: 1 },
-  ]);
+    loadData();
+  }, []);
 
-  // Actions
-  const addAppointment = (appointment) => setAppointments([...appointments, { ...appointment, id: Date.now() }]);
-  const addService = (service) => setServices([...services, { ...service, id: Date.now() }]);
-  const addMaterial = (material) => setInventory([...inventory, { ...material, id: Date.now() }]);
-  const addTransaction = (transaction) => setTransactions([...transactions, { ...transaction, id: Date.now() }]);
-  const addClient = (client) => setClients([...clients, { ...client, id: Date.now() }]);
+  // Actions (Agora salvam na nuvem e depois atualizam o estado local)
+  const addAppointment = async (appointment) => {
+    const data = await insertAppointment(appointment);
+    if (data) setAppointments([...appointments, data]);
+  };
+
+  const addService = async (service) => {
+    const data = await insertService(service);
+    if (data) setServices([...services, data]);
+  };
+
+  const addMaterial = async (material) => {
+    const data = await insertMaterial(material);
+    if (data) setInventory([...inventory, data]);
+  };
+
+  const addTransaction = async (transaction) => {
+    const data = await insertTransaction(transaction);
+    if (data) setTransactions([...transactions, data]);
+  };
+
+  const addClient = async (client) => {
+    const data = await insertClient(client);
+    if (data) setClients([...clients, data]);
+  };
+
+  const upgradeToPremium = () => {
+    setIsPremium(true);
+    // Aqui atualizaríamos o banco de dados Supabase: updateProfile(user.id, { is_premium: true })
+  };
 
   return (
     <AppContext.Provider value={{ 
+      user, isPremium, upgradeToPremium, loading,
       appointments, addAppointment, 
       services, addService,
       inventory, addMaterial,
