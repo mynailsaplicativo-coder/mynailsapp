@@ -1,96 +1,43 @@
 /**
  * Serviço de Integração Asaas (Pré-moldado)
- * 
- * ATENÇÃO: Devido a políticas de segurança (CORS) e proteção da chave da API,
- * chamadas diretas do frontend (React) para o Asaas geralmente são bloqueadas.
- * O ideal é que estas funções sejam movidas para o seu Backend (Node.js, Firebase Functions, etc) no futuro.
- * 
- * Por enquanto, deixamos a estrutura montada para facilitar a transição!
  */
 
 const ASAAS_BASE_URL = 'https://api.asaas.com/v3';
-// No Vite, as variáveis de ambiente com VITE_ ficam acessíveis via import.meta.env
+// Utilizamos a chave fornecida na variável de ambiente
 const API_KEY = import.meta.env.VITE_ASAAS_API_KEY;
 
 const headers = {
   'Content-Type': 'application/json',
-  'access_token': API_KEY
+  'access_token': API_KEY || '$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjUwYzgxNTQwLTYzMmQtNDEyYS05OWJjLTA1OTZkOTlhMzhjYTo6JGFhY2hfN2U3NjE3OTMtOWNjOC00NzA2LTgyOWEtZWZmZWI2Njk1NmMw'
 };
 
 /**
- * Cria um novo cliente no Asaas
- * @param {Object} clientData - Dados do cliente { name, cpfCnpj, email, phone }
+ * Gera um link genérico de pagamento (Checkout Asaas)
+ * Ideal para testes no frontend sem precisar capturar CPF e Endereço.
  */
-export const createCustomer = async (clientData) => {
+export const createPaymentLink = async () => {
   try {
-    const response = await fetch(`${ASAAS_BASE_URL}/customers`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(clientData)
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Erro ao criar cliente: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro na API Asaas (createCustomer):', error);
-    throw error;
-  }
-};
-
-/**
- * Gera uma cobrança avulsa (ex: pagamento de um serviço de unha pelo app)
- * @param {Object} paymentData - Dados do pagamento { customer, billingType, value, dueDate, description }
- */
-export const createPayment = async (paymentData) => {
-  try {
-    const response = await fetch(`${ASAAS_BASE_URL}/payments`, {
+    const response = await fetch(`${ASAAS_BASE_URL}/paymentLinks`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        ...paymentData,
-        billingType: 'PIX', // Forçando PIX como padrão para o app
+        billingType: 'UNDEFINED',
+        chargeType: 'DETACHED',
+        name: 'Plano Premium - My Nails',
+        description: 'Liberação de todos os recursos premium do aplicativo',
+        value: 49.90,
+        dueDateLimitDays: 3
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Erro ao criar pagamento: ${response.statusText}`);
+      throw new Error(`Erro na API do Asaas: ${response.statusText}`);
     }
 
     const data = await response.json();
-    return data;
+    return data.url; // Retorna a URL de checkout (ex: https://www.asaas.com/c/123456)
   } catch (error) {
-    console.error('Erro na API Asaas (createPayment):', error);
-    throw error;
-  }
-};
-
-/**
- * Cria uma assinatura (ex: Plano Premium para Profissionais)
- * @param {Object} subscriptionData - { customer, billingType, value, nextDueDate, cycle, description }
- */
-export const createSubscription = async (subscriptionData) => {
-  try {
-    const response = await fetch(`${ASAAS_BASE_URL}/subscriptions`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        ...subscriptionData,
-        cycle: 'MONTHLY',
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro ao criar assinatura: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro na API Asaas (createSubscription):', error);
+    console.error('Falha ao gerar link de pagamento:', error);
     throw error;
   }
 };

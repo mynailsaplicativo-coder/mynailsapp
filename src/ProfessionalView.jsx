@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, LogOut } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { signOutUser } from './services/auth';
+import { createPaymentLink } from './services/asaas';
 import { useNavigate } from 'react-router-dom';
 
 const ProfessionalView = () => {
@@ -349,16 +350,24 @@ const EstoqueView = () => {
 const AssinaturaView = () => {
   const { isPremium, upgradeToPremium } = useAppContext();
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleCheckout = async () => {
     setLoading(true);
-    // Simula a chamada para a API do Asaas (que criamos no service)
-    // Na vida real: await createSubscription({...});
-    setTimeout(() => {
-      alert("Sucesso! O Asaas processou a assinatura. Você agora é Premium!");
+    setErrorMsg('');
+    try {
+      const checkoutUrl = await createPaymentLink();
+      window.open(checkoutUrl, '_blank');
+      
+      // Simulação do Webhook: Libera o acesso para testes
+      alert("A tela de pagamento segura do Asaas foi aberta!\n\nNa vida real, a conta só vira Premium após o webhook do Asaas confirmar o Pix. Para testes, liberamos agora.");
       upgradeToPremium();
+    } catch (err) {
+      setErrorMsg('Erro de CORS ou Chave Inválida. Verifique o console.');
+      console.error(err);
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   if (isPremium) return (
@@ -378,8 +387,9 @@ const AssinaturaView = () => {
       <p style={{ color: '#ccc', maxWidth: '500px', margin: '0 auto 2rem' }}>
         Seu portfólio no topo das buscas do app cliente, confirmação automática de agenda via WhatsApp e relatórios avançados de financeiro e estoque.
       </p>
+      {errorMsg && <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.5rem', backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: '8px' }}>{errorMsg}</div>}
       <button className="btn btn-primary" onClick={handleCheckout} disabled={loading}>
-        {loading ? 'Processando Asaas...' : 'Ativar Premium (R$ 49,90/mês)'}
+        {loading ? 'Gerando Tela de Pagamento...' : 'Ativar Premium (R$ 49,90/mês)'}
       </button>
     </div>
   );
