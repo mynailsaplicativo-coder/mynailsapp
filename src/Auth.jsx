@@ -20,9 +20,9 @@ const Auth = ({ isLogin }) => {
         Em um app real, poderíamos ler publicMetadata para direcionar clientes vs pros.
       */}
       {isLogin ? (
-        <SignIn routing="path" path="/login" signUpUrl="/cadastro" fallbackRedirectUrl="/app/pro" />
+        <SignIn signUpUrl="/cadastro" fallbackRedirectUrl="/app/pro" />
       ) : (
-        <SignUp routing="path" path="/cadastro" signInUrl="/login" fallbackRedirectUrl="/app/pro" />
+        <SignUp signInUrl="/login" fallbackRedirectUrl="/app/pro" />
       )}
     </div>
   );

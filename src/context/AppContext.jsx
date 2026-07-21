@@ -16,6 +16,7 @@ export const AppProvider = ({ children }) => {
   const [services, setServices] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [clients, setClients] = useState([]);
   const [isPremium, setIsPremium] = useState(false); // Fake profile premium status
   const [trialDaysLeft, setTrialDaysLeft] = useState(15);
   const [walletId, setWalletId] = useState(null); // Asaas Wallet ID para Split
