@@ -115,9 +115,9 @@ export const deleteProfile = async (id) => {
 };
 
 export const insertService = async (service, userId) => {
-  if (!supabase || !userId) return null;
+  if (!supabase || !userId) return { error: 'Usuário não autenticado' };
   const { data, error } = await supabase.from('services').insert([{ ...service, user_id: userId }]).select();
-  if (error) { console.error('Erro:', error); return null; }
+  if (error) { console.error('Erro no banco:', error); return { error: error.message || error.details || JSON.stringify(error) }; }
   return data[0];
 };
 
@@ -190,9 +190,9 @@ export const fetchProducts = async (userId) => {
 };
 
 export const insertProduct = async (product, userId) => {
-  if (!supabase || !userId) return null;
+  if (!supabase || !userId) return { error: 'Usuário não autenticado' };
   const { data, error } = await supabase.from('products').insert([{ ...product, user_id: userId }]).select();
-  if (error) { console.error('Erro:', error); return null; }
+  if (error) { console.error('Erro:', error); return { error: error.message }; }
   return data[0];
 };
 

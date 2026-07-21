@@ -98,8 +98,8 @@ export const AppProvider = ({ children }) => {
 
   const addService = async (service) => {
     const data = await insertService(service, user.id);
-    if (data) setServices([...services, data]);
-    else alert('Erro ao salvar serviço no banco de dados. Você executou o ALTER TABLE services ADD COLUMN category no Supabase?');
+    if (data && !data.error) setServices([...services, data]);
+    else alert(`Erro do Supabase: ${data?.error || 'Erro Desconhecido'}\n\nVocê rodou o script CREATE TABLE services no Supabase?`);
   };
 
   const addMaterial = async (material) => {
@@ -128,8 +128,8 @@ export const AppProvider = ({ children }) => {
 
   const addProduct = async (product) => {
     const data = await insertProduct(product, user.id);
-    if (data) setProducts([...products, data]);
-    else alert('Erro ao salvar produto no banco de dados. Verifique a tabela products.');
+    if (data && !data.error) setProducts([...products, data]);
+    else alert(`Erro do Supabase: ${data?.error || 'Erro Desconhecido'}`);
   };
 
   const addReview = async (review) => {
