@@ -58,6 +58,10 @@ const ProfessionalView = () => {
           <DollarSign size={22} />
           <span>Finanças</span>
         </button>
+        <button className={`bottom-nav-item ${activeTab === 'servicos' ? 'active' : ''}`} onClick={() => setActiveTab('servicos')}>
+          <Scissors size={22} />
+          <span>Serviços</span>
+        </button>
         <button className={`bottom-nav-item ${activeTab === 'estoque' ? 'active' : ''}`} onClick={() => setActiveTab('estoque')}>
           <Package size={22} />
           <span>Estoque</span>
@@ -445,13 +449,14 @@ const AssinaturaView = () => {
     setErrorMsg('');
     try {
       const email = user?.primaryEmailAddress?.emailAddress || 'manicure@mynails.app.br';
-      const checkoutUrl = await createPaymentLink(planName, price, user?.fullName, email);
+      const name = user?.fullName || profile?.name || 'Manicure Profissional';
+      const checkoutUrl = await createPaymentLink(planName, price, name, email);
       window.open(checkoutUrl, '_blank');
       
       alert(`A tela de pagamento do Asaas para o Plano ${planName} foi aberta!\n\nNa vida real, a conta só é liberada após o webhook do Asaas confirmar o Pix. Para testes, vamos liberar agora.`);
       upgradeToPremium();
     } catch (err) {
-      setErrorMsg('Erro de CORS ou Chave Inválida. Verifique o console.');
+      setErrorMsg(`Erro: ${err.message || 'Verifique o console.'}`);
       console.error(err);
     } finally {
       setLoading(false);
