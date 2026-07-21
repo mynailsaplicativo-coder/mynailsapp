@@ -179,6 +179,8 @@ const ProPublicPage = () => {
                 ))}
               </div>
             )}
+              </>
+            )}
 
             {activeTab === 'portfolio' && (
               <div className="grid-cards">
