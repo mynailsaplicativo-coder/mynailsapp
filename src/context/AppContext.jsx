@@ -18,6 +18,7 @@ export const AppProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [isPremium, setIsPremium] = useState(false); // Fake profile premium status
   const [trialDaysLeft, setTrialDaysLeft] = useState(15);
+  const [walletId, setWalletId] = useState(null); // Asaas Wallet ID para Split
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -97,6 +98,7 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider value={{ 
       user, isPremium, upgradeToPremium, loading, trialDaysLeft,
+      walletId, setWalletId,
       appointments, addAppointment, 
       services, addService,
       inventory, addMaterial,

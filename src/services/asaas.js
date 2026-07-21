@@ -1,66 +1,65 @@
 /**
- * Serviço de Integração Asaas (Pré-moldado)
+ * Serviço de Integração Asaas (Backend Vercel API)
  */
 
-const ASAAS_BASE_URL = 'https://api.asaas.com/v3';
-const API_KEY = import.meta.env.VITE_ASAAS_API_KEY;
+// Se estiver rodando local, aponta para localhost, senão aponta para a raiz (Vercel)
+const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:3000/api' : '/api';
 
-const headers = {
-  'Content-Type': 'application/json',
-  'access_token': API_KEY || '$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjUwYzgxNTQwLTYzMmQtNDEyYS05OWJjLTA1OTZkOTlhMzhjYTo6JGFhY2hfN2U3NjE3OTMtOWNjOC00NzA2LTgyOWEtZWZmZWI2Njk1NmMw'
+/**
+ * Cria uma Subconta no Asaas (Marketplace White Label)
+ */
+export const createSubaccount = async (accountData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/asaas/create-subaccount`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(accountData)
+    });
+    
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || err.description || 'Erro ao criar conta Asaas');
+    }
+    
+    return await response.json(); // Retorna { walletId, apiKey, ... }
+  } catch (error) {
+    console.error('Falha ao criar subconta:', error);
+    throw error;
+  }
 };
 
 /**
- * Gera um link genérico de pagamento (Checkout Asaas)
- * Atualizado para aceitar Planos Mensais e Valores dinâmicos.
+ * Gera um link de pagamento. Se houver splitWalletId, envia 100% para a manicure.
  */
-export const createPaymentLink = async (planName, value) => {
+export const createSplitPayment = async ({ clientName, clientEmail, value, description, splitWalletId }) => {
   try {
-    const response = await fetch(`${ASAAS_BASE_URL}/paymentLinks`, {
+    const response = await fetch(`${API_BASE_URL}/asaas/create-payment`, {
       method: 'POST',
-      headers,
-      body: JSON.stringify({
-        billingType: 'UNDEFINED',
-        chargeType: 'RECURRING', // Transforma em Assinatura (se a conta Asaas permitir no link genérico)
-        name: `Plano ${planName} - My Nails`,
-        description: `Assinatura mensal do Plano ${planName}`,
-        value: value,
-        dueDateLimitDays: 3,
-        endDate: '2099-12-31', // Mantém a recorrência ativa indefinidamente
-        cycle: 'MONTHLY'
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientName, clientEmail, value, description, splitWalletId })
     });
 
-    // Fallback: se o Asaas recusar chargeType RECURRING em paymentLinks para essa conta, 
-    // ele deve ser testado, mas na documentação v3 é permitido.
-    
     if (!response.ok) {
-      const errData = await response.json().catch(()=>({}));
-      console.warn("Aviso Asaas:", errData);
-      
-      // Tenta fallback sem RECURRING caso a conta não tenha permissão de assinaturas genéricas
-      const fallbackResponse = await fetch(`${ASAAS_BASE_URL}/paymentLinks`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          billingType: 'UNDEFINED',
-          chargeType: 'DETACHED',
-          name: `Plano ${planName} - My Nails (Pagamento Único Fallback)`,
-          description: `Assinatura do Plano ${planName}`,
-          value: value,
-          dueDateLimitDays: 3
-        })
-      });
-      if (!fallbackResponse.ok) throw new Error(`Erro na API do Asaas (Fallback): ${fallbackResponse.statusText}`);
-      
-      const fbData = await fallbackResponse.json();
-      return fbData.url;
+      const err = await response.json();
+      throw new Error(err.error || err.description || 'Erro ao gerar pagamento');
     }
 
     const data = await response.json();
-    return data.url; 
+    return data.invoiceUrl; // A URL final do Asaas para o cliente pagar
   } catch (error) {
-    console.error('Falha ao gerar link de pagamento:', error);
+    console.error('Falha ao gerar pagamento:', error);
     throw error;
   }
+};
+
+/**
+ * Compatibilidade: Link genérico de Assinatura (Planos Profissionais)
+ */
+export const createPaymentLink = async (planName, value) => {
+  // Vamos usar a mesma função de pagamento, mas enviando o dinheiro para a conta Principal da Plataforma (sem splitWalletId)
+  return await createSplitPayment({
+    clientName: 'Manicure Profissional',
+    value: value,
+    description: `Assinatura Plano ${planName}`
+  });
 };

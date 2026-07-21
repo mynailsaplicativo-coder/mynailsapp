@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Calendar, Star, Heart, Sparkles, Search, MapPin, Image as ImageIcon, TrendingUp, Wallet, Gift, Home } from 'lucide-react';
+import { Calendar, Star, Heart, Sparkles, Search, MapPin, Image as ImageIcon, TrendingUp, Wallet, Gift, Home, X } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { UserButton } from '@clerk/clerk-react';
+import { createSplitPayment } from './services/asaas';
 
 const ClientView = () => {
   const [activeTab, setActiveTab] = useState('explorar'); // explorar, inspiracoes, fidelidade
@@ -198,16 +199,38 @@ const NailTechCard = ({ name, rating, reviews, distance, tags, image, onClick })
 );
 
 const BookingModal = ({ pro, onClose }) => {
-  const { addAppointment, services } = useAppContext();
+  const { addAppointment, services, walletId } = useAppContext();
   const [service, setService] = useState('');
   const [time, setTime] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (service && time) {
-      addAppointment({ client: 'Você (Cliente App)', service: `${service} com ${pro}`, time, status: 'Confirmado pelo App' });
-      alert('Agendamento realizado com sucesso! O pagamento pode ser feito no app.');
-      onClose();
+      setLoading(true);
+      try {
+        const selectedServiceObj = services.find(s => s.name === service);
+        const price = selectedServiceObj ? parseFloat(selectedServiceObj.price) : 50.00;
+        
+        // Se a manicure conectou a conta, walletId vai existir e o split acontece.
+        // Se não, o dinheiro cai na conta principal da plataforma.
+        const invoiceUrl = await createSplitPayment({
+          clientName: 'Cliente My Nails',
+          clientEmail: 'cliente@mynails.app.br',
+          value: price,
+          description: `Pagamento de ${service} com ${pro}`,
+          splitWalletId: walletId
+        });
+        
+        addAppointment({ client: 'Você (Cliente App)', service: `${service} com ${pro}`, time, status: 'Aguardando Pagamento' });
+        alert(`Tudo certo! Redirecionando para o pagamento seguro.\n\nSimulação: O dinheiro (R$ ${price}) será dividido e enviado diretamente para a conta Asaas da Manicure (Wallet: ${walletId || 'Nenhuma/Conta Principal'})`);
+        window.open(invoiceUrl, '_blank');
+        onClose();
+      } catch (err) {
+        alert("Erro ao gerar pagamento: " + err.message);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -234,7 +257,9 @@ const BookingModal = ({ pro, onClose }) => {
             <label>Selecione o Horário para Hoje</label>
             <input type="time" className="form-input" value={time} onChange={e => setTime(e.target.value)} required />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem', padding: '1rem' }}>Confirmar & Pagar</button>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem', padding: '1rem' }} disabled={loading}>
+            {loading ? 'Conectando ao Banco...' : 'Confirmar & Pagar Seguramente'}
+          </button>
         </form>
       </div>
     </div>

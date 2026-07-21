@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { UserButton } from '@clerk/clerk-react';
-import { createPaymentLink } from './services/asaas';
+import { createPaymentLink, createSubaccount } from './services/asaas';
 
 const ProfessionalView = () => {
   const [activeTab, setActiveTab] = useState('agenda');
@@ -36,6 +36,7 @@ const ProfessionalView = () => {
         {activeTab === 'servicos' && <ServicosView />}
         {activeTab === 'financeiro' && <FinanceiroView />}
         {activeTab === 'estoque' && <EstoqueView />}
+        {activeTab === 'recebimentos' && <RecebimentosView />}
         {activeTab === 'assinatura' && <AssinaturaView />}
 
         {isNewBookingOpen && <NewBookingModal onClose={() => setIsNewBookingOpen(false)} />}
@@ -59,6 +60,10 @@ const ProfessionalView = () => {
           <Package size={22} />
           <span>Estoque</span>
         </button>
+        <button className={`bottom-nav-item ${activeTab === 'recebimentos' ? 'active' : ''}`} onClick={() => setActiveTab('recebimentos')}>
+          <Wallet size={22} />
+          <span>Conta</span>
+        </button>
         <button className={`bottom-nav-item ${activeTab === 'assinatura' ? 'active' : ''}`} onClick={() => setActiveTab('assinatura')}>
           <Award size={22} />
           <span>Premium</span>
@@ -69,6 +74,72 @@ const ProfessionalView = () => {
 };
 
 /* ----- VIEWS ----- */
+
+const RecebimentosView = () => {
+  const { walletId, setWalletId } = useAppContext();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ name: '', cpfCnpj: '', email: '', phone: '', postalCode: '', address: '', addressNumber: '', province: '' });
+  const [msg, setMsg] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMsg(null);
+    try {
+      const data = await createSubaccount(formData);
+      setWalletId(data.walletId);
+      setMsg({ type: 'success', text: 'Conta Asaas criada com sucesso! Você já pode receber pagamentos.' });
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (walletId) {
+    return (
+      <div className="animate-in card" style={{ padding: '3rem', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+        <Wallet size={48} color="var(--primary-color)" style={{ margin: '0 auto 1rem' }} />
+        <h2>Sua Conta de Recebimentos está Ativa!</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>ID da Carteira: <strong>{walletId}</strong></p>
+        <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '8px', color: 'var(--success)' }}>
+          ✅ Quando suas clientes pagarem pelo link do app, o dinheiro (descontado a taxa) cairá automaticamente na sua conta Asaas.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-in">
+      <div style={{ marginBottom: '2rem' }}>
+        <h2>Conta de Recebimentos (Asaas)</h2>
+        <p style={{ color: 'var(--text-secondary)' }}>Crie sua conta digital gratuita no Asaas para receber pagamentos das clientes automaticamente com Split.</p>
+      </div>
+      
+      {msg && (
+        <div style={{ padding: '1rem', marginBottom: '1.5rem', borderRadius: '8px', backgroundColor: msg.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: msg.type === 'error' ? 'var(--danger)' : 'var(--success)' }}>
+          {msg.text}
+        </div>
+      )}
+
+      <form className="card" onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div className="input-group" style={{ gridColumn: '1 / -1' }}><label>Nome Completo (ou Razão Social)</label><input type="text" className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} /></div>
+        <div className="input-group"><label>CPF ou CNPJ (só números)</label><input type="text" className="form-input" required value={formData.cpfCnpj} onChange={e => setFormData({...formData, cpfCnpj: e.target.value})} /></div>
+        <div className="input-group"><label>Email</label><input type="email" className="form-input" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+        <div className="input-group"><label>Celular (só números com DDD)</label><input type="text" className="form-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
+        <div className="input-group"><label>CEP</label><input type="text" className="form-input" required value={formData.postalCode} onChange={e => setFormData({...formData, postalCode: e.target.value})} /></div>
+        <div className="input-group" style={{ gridColumn: '1 / -1' }}><label>Endereço</label><input type="text" className="form-input" required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} /></div>
+        <div className="input-group"><label>Número</label><input type="text" className="form-input" required value={formData.addressNumber} onChange={e => setFormData({...formData, addressNumber: e.target.value})} /></div>
+        <div className="input-group"><label>Bairro</label><input type="text" className="form-input" required value={formData.province} onChange={e => setFormData({...formData, province: e.target.value})} /></div>
+        <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+            {loading ? 'Criando Conta Segura...' : 'Criar Conta de Recebimentos'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
 
 const AgendaView = () => {
   const { appointments } = useAppContext();
