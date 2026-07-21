@@ -53,13 +53,30 @@ export const createSplitPayment = async ({ clientName, clientEmail, value, descr
 };
 
 /**
- * Compatibilidade: Link genérico de Assinatura (Planos Profissionais)
+ * Gera um link de assinatura mensal recorrente
  */
-export const createPaymentLink = async (planName, value) => {
-  // Vamos usar a mesma função de pagamento, mas enviando o dinheiro para a conta Principal da Plataforma (sem splitWalletId)
-  return await createSplitPayment({
-    clientName: 'Manicure Profissional',
-    value: value,
-    description: `Assinatura Plano ${planName}`
-  });
+export const createPaymentLink = async (planName, value, userName = 'Manicure Profissional', userEmail = 'manicure@mynails.app.br') => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/asaas/create-subscription`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        clientName: userName, 
+        clientEmail: userEmail,
+        value: value, 
+        description: `Assinatura Plano ${planName}` 
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || err.description || 'Erro ao gerar assinatura');
+    }
+
+    const data = await response.json();
+    return data.invoiceUrl;
+  } catch (error) {
+    console.error('Falha ao gerar assinatura:', error);
+    throw error;
+  }
 };

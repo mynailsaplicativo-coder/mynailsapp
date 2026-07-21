@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Star, Heart, Sparkles, Search, MapPin, Image as ImageIcon, TrendingUp, Wallet, Gift, Home, X } from 'lucide-react';
+import { Calendar, Star, Heart, Sparkles, Search, MapPin, Image as ImageIcon, TrendingUp, Wallet, Gift, Home, X, Lightbulb } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { UserButton } from '@clerk/clerk-react';
 import { createSplitPayment } from './services/asaas';
@@ -59,6 +59,19 @@ const HomeTab = () => {
     loadPros();
   }, [searchCity]);
 
+  // Função para gerar dica baseada nos objetivos
+  const getGoalTip = () => {
+    if (!profile?.goals) return null;
+    const goals = profile.goals.split(',');
+    if (goals.includes('Crescer as unhas')) return "Dica: Mantenha as cutículas hidratadas com óleo próprio para acelerar o crescimento!";
+    if (goals.includes('Parar de roer')) return "Dica: Experimente usar um esmalte com gosto amargo para ajudar a perder o hábito.";
+    if (goals.includes('Unhas mais fortes')) return "Dica: Use bases fortalecedoras com queratina e evite contato direto com produtos de limpeza.";
+    if (goals.includes('Manter a esmaltação')) return "Dica: Use top coat a cada 3 dias para renovar o brilho e aumentar a durabilidade.";
+    return null;
+  };
+
+  const tip = getGoalTip();
+
   return (
     <div className="animate-in" style={{ paddingBottom: '100px' }}>
       <header style={{ padding: '2rem 1.5rem', backgroundColor: 'var(--secondary-color)', color: 'white' }}>
@@ -97,6 +110,18 @@ const HomeTab = () => {
             </button>
           </div>
         </section>
+
+        {tip && (
+          <section style={{ marginBottom: '2rem' }}>
+            <div className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', backgroundColor: 'rgba(255, 107, 107, 0.05)', border: '1px solid rgba(255, 107, 107, 0.2)' }}>
+              <Lightbulb size={24} color="var(--primary-color)" style={{ flexShrink: 0 }} />
+              <div>
+                <h3 style={{ fontSize: '1.05rem', marginBottom: '0.25rem', color: 'var(--primary-color)' }}>Dica Personalizada</h3>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{tip}</p>
+              </div>
+            </div>
+          </section>
+        )}
 
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

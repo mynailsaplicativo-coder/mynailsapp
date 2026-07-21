@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet, Share2 } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
-import { UserButton } from '@clerk/clerk-react';
+import { UserButton, useUser } from '@clerk/clerk-react';
 import { createPaymentLink, createSubaccount } from './services/asaas';
 
 const ProfessionalView = () => {
@@ -436,6 +436,7 @@ const EstoqueView = () => {
 
 const AssinaturaView = () => {
   const { isPremium, upgradeToPremium, trialDaysLeft } = useAppContext();
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -443,7 +444,8 @@ const AssinaturaView = () => {
     setLoading(true);
     setErrorMsg('');
     try {
-      const checkoutUrl = await createPaymentLink(planName, price);
+      const email = user?.primaryEmailAddress?.emailAddress || 'manicure@mynails.app.br';
+      const checkoutUrl = await createPaymentLink(planName, price, user?.fullName, email);
       window.open(checkoutUrl, '_blank');
       
       alert(`A tela de pagamento do Asaas para o Plano ${planName} foi aberta!\n\nNa vida real, a conta só é liberada após o webhook do Asaas confirmar o Pix. Para testes, vamos liberar agora.`);

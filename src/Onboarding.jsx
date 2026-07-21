@@ -17,12 +17,28 @@ const Onboarding = () => {
     state: '',
     city: '',
     neighborhood: '',
-    address: ''
+    address: '',
+    goals: []
   });
+
+  const [step, setStep] = useState(1); // 1: Role, 2: Info, 3: Goals (only if cliente)
+
+  const handleGoalToggle = (goal) => {
+    setFormData(prev => ({
+      ...prev,
+      goals: prev.goals.includes(goal) 
+        ? prev.goals.filter(g => g !== goal) 
+        : [...prev.goals, goal]
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!role) return alert('Selecione se você é Cliente ou Manicure.');
+    if (role === 'cliente' && step === 2) {
+      setStep(3); // Go to goals step
+      return;
+    }
     
     setLoading(true);
     try {
@@ -33,7 +49,8 @@ const Onboarding = () => {
         state: formData.state,
         city: formData.city,
         neighborhood: formData.neighborhood,
-        address: formData.address
+        address: formData.address,
+        goals: formData.goals.join(',') // Salvar como string separada por vírgula
       };
       
       const savedProfile = await insertProfile(newProfile);
@@ -89,9 +106,9 @@ const Onboarding = () => {
               </SignOutButton>
             </div>
           </div>
-        ) : (
+        ) : step === 2 || role === 'pro' ? (
           <form className="animate-in" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', cursor: 'pointer' }} onClick={() => setRole(null)}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', cursor: 'pointer' }} onClick={() => { setRole(null); setStep(1); }}>
               <span className="badge badge-primary">{role === 'pro' ? 'Profissional' : 'Cliente'}</span>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-light)', textDecoration: 'underline' }}>Trocar</span>
             </div>
@@ -123,9 +140,33 @@ const Onboarding = () => {
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={loading}>
-              {loading ? 'Salvando...' : 'Concluir Perfil'}
+              {loading ? 'Processando...' : (role === 'cliente' ? 'Avançar' : 'Concluir Perfil')}
             </button>
           </form>
+        ) : (
+          <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <button onClick={() => setStep(2)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', alignSelf: 'flex-start', cursor: 'pointer' }}>← Voltar</button>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Quais são seus objetivos?</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Vamos personalizar as dicas do app para você.</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {['Crescer as unhas', 'Parar de roer', 'Unhas mais fortes', 'Manter a esmaltação'].map(goal => (
+                <label key={goal} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={formData.goals.includes(goal)}
+                    onChange={() => handleGoalToggle(goal)}
+                    style={{ transform: 'scale(1.5)' }}
+                  />
+                  <span>{goal}</span>
+                </label>
+              ))}
+            </div>
+
+            <button onClick={handleSubmit} className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={loading}>
+              {loading ? 'Salvando...' : 'Concluir Perfil'}
+            </button>
+          </div>
         )}
       </div>
     </div>
