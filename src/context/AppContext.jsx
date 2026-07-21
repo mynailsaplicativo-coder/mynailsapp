@@ -6,7 +6,10 @@ import {
   fetchInventory, insertMaterial,
   fetchTransactions, insertTransaction,
   fetchClients, insertClient,
-  fetchProfile
+  fetchProfile, updateProfile,
+  fetchPortfolio, insertPortfolio,
+  fetchProducts, insertProduct,
+  fetchReviews, insertReview
 } from '../services/database';
 
 const AppContext = createContext();
@@ -18,6 +21,10 @@ export const AppProvider = ({ children }) => {
   const [inventory, setInventory] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [clients, setClients] = useState([]);
+  const [portfolio, setPortfolio] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  
   const [isPremium, setIsPremium] = useState(false); // Fake profile premium status
   const [trialDaysLeft, setTrialDaysLeft] = useState(15);
   const [walletId, setWalletId] = useState(null); // Asaas Wallet ID para Split
@@ -50,12 +57,15 @@ export const AppProvider = ({ children }) => {
         }
 
         // Tenta buscar dados reais do Supabase (para Profissionais)
-        const [appts, svcs, inv, tx, cls] = await Promise.all([
+        const [appts, svcs, inv, tx, cls, port, prod, revs] = await Promise.all([
           fetchAppointments(user.id),
           fetchServices(user.id),
           fetchInventory(user.id),
           fetchTransactions(user.id),
-          fetchClients(user.id)
+          fetchClients(user.id),
+          fetchPortfolio(user.id),
+          fetchProducts(user.id),
+          fetchReviews(user.id)
         ]);
 
         setAppointments(appts || []);
@@ -63,6 +73,9 @@ export const AppProvider = ({ children }) => {
         setInventory(inv || []);
         setTransactions(tx || []);
         setClients(cls || []);
+        setPortfolio(port || []);
+        setProducts(prod || []);
+        setReviews(revs || []);
       } catch (err) {
         console.error("Erro ao carregar dados da nuvem:", err);
       } finally {
@@ -102,6 +115,26 @@ export const AppProvider = ({ children }) => {
     if (data) setClients([...clients, data]);
   };
 
+  const addPortfolio = async (item) => {
+    const data = await insertPortfolio(item, user.id);
+    if (data) setPortfolio([data, ...portfolio]);
+  };
+
+  const addProduct = async (product) => {
+    const data = await insertProduct(product, user.id);
+    if (data) setProducts([...products, data]);
+  };
+
+  const addReview = async (review) => {
+    const data = await insertReview(review, user.id);
+    if (data) setReviews([data, ...reviews]);
+  };
+
+  const editProfile = async (updates) => {
+    const data = await updateProfile(user.id, updates);
+    if (data) setProfile(data);
+  };
+
   const upgradeToPremium = () => {
     setIsPremium(true);
     // Aqui atualizaríamos o banco de dados Supabase: updateProfile(user.id, { is_premium: true })
@@ -115,7 +148,11 @@ export const AppProvider = ({ children }) => {
       services, addService,
       inventory, addMaterial,
       transactions, addTransaction,
-      clients, addClient
+      clients, addClient,
+      portfolio, addPortfolio,
+      products, addProduct,
+      reviews, addReview,
+      editProfile
     }}>
       {children}
     </AppContext.Provider>

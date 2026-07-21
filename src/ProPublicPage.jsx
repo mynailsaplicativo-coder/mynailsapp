@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchProfile, fetchServices, insertAppointment, insertClient } from './services/database';
+import { fetchProfile, fetchServices, insertAppointment, insertClient, fetchPortfolio, fetchProducts, fetchReviews } from './services/database';
 import { createSplitPayment } from './services/asaas';
-import { MapPin, Calendar, Clock, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { MapPin, Calendar, Clock, ArrowLeft, CheckCircle2, Star, MessageCircle, Image, ShoppingBag, Scissors } from 'lucide-react';
 import { useUser } from '@clerk/clerk-react'; // Para ver se o cliente já está logado
 
 const ProPublicPage = () => {
@@ -12,8 +12,13 @@ const ProPublicPage = () => {
   
   const [pro, setPro] = useState(null);
   const [services, setServices] = useState([]);
+  const [portfolio, setPortfolio] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [activeTab, setActiveTab] = useState('servicos'); // servicos, portfolio, loja, avaliacoes
 
   const [selectedService, setSelectedService] = useState(null);
   const [step, setStep] = useState(1); // 1: Serviços, 2: Agendamento, 3: Confirmação
@@ -37,6 +42,15 @@ const ProPublicPage = () => {
         
         const proServices = await fetchServices(id);
         setServices(proServices || []);
+        
+        const [port, prod, revs] = await Promise.all([
+          fetchPortfolio(id),
+          fetchProducts(id),
+          fetchReviews(id)
+        ]);
+        setPortfolio(port || []);
+        setProducts(prod || []);
+        setReviews(revs || []);
       } catch (err) {
         setError('Erro ao carregar os dados.');
       } finally {
@@ -104,24 +118,42 @@ const ProPublicPage = () => {
       </div>
 
       {/* Pro Profile Header */}
-      <div style={{ padding: '2rem 1.5rem', backgroundColor: 'var(--primary-color)', color: 'white', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <img 
-          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(pro.name)}&background=random`} 
-          alt={pro.name} 
-          style={{ width: '80px', height: '80px', borderRadius: '50%', border: '2px solid white' }}
-        />
-        <div>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{pro.name}</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', opacity: 0.9 }}>
-            <MapPin size={16} />
-            <span>{pro.city}, {pro.state}</span>
+      <div style={{ padding: '2rem 1.5rem', backgroundColor: 'var(--primary-color)', color: 'white' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+          <img 
+            src={pro.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(pro.name)}&background=random`} 
+            alt={pro.name} 
+            style={{ width: '80px', height: '80px', borderRadius: '50%', border: '2px solid white', objectFit: 'cover' }}
+          />
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{pro.name}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', opacity: 0.9, marginBottom: '0.5rem' }}>
+              <MapPin size={16} />
+              <span>{pro.city}, {pro.state}</span>
+            </div>
+            {pro.description && <p style={{ fontSize: '0.95rem', opacity: 0.9, lineHeight: 1.4 }}>{pro.description}</p>}
           </div>
         </div>
+        {pro.whatsapp && (
+          <a href={`https://wa.me/55${pro.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="btn" style={{ backgroundColor: '#25D366', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem', padding: '0.75rem', width: '100%', textDecoration: 'none' }}>
+            <MessageCircle size={20} /> Falar no WhatsApp
+          </a>
+        )}
       </div>
 
       <div style={{ padding: '1.5rem' }}>
         {step === 1 && (
           <div className="animate-in">
+            {/* Nav Tabs */}
+            <div style={{ display: 'flex', overflowX: 'auto', gap: '0.5rem', marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-color)', scrollbarWidth: 'none' }}>
+              <button className={`btn ${activeTab === 'servicos' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('servicos')} style={{ whiteSpace: 'nowrap', borderRadius: '20px', padding: '0.5rem 1rem' }}><Scissors size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'4px'}}/> Serviços</button>
+              <button className={`btn ${activeTab === 'portfolio' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('portfolio')} style={{ whiteSpace: 'nowrap', borderRadius: '20px', padding: '0.5rem 1rem' }}><Image size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'4px'}}/> Portfólio</button>
+              <button className={`btn ${activeTab === 'loja' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('loja')} style={{ whiteSpace: 'nowrap', borderRadius: '20px', padding: '0.5rem 1rem' }}><ShoppingBag size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'4px'}}/> Loja</button>
+              <button className={`btn ${activeTab === 'avaliacoes' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('avaliacoes')} style={{ whiteSpace: 'nowrap', borderRadius: '20px', padding: '0.5rem 1rem' }}><Star size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'4px'}}/> Avaliações</button>
+            </div>
+
+            {activeTab === 'servicos' && (
+              <>
             <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Escolha um Serviço</h3>
             {services.length === 0 ? (
               <p style={{ color: 'var(--text-secondary)' }}>Esta profissional ainda não cadastrou serviços.</p>
@@ -143,6 +175,49 @@ const ProPublicPage = () => {
                         Selecionar
                       </button>
                     </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {activeTab === 'portfolio' && (
+              <div className="grid-cards">
+                {portfolio.length === 0 ? <p style={{ color: 'var(--text-secondary)' }}>Nenhuma foto ainda.</p> : portfolio.map(item => (
+                  <div key={item.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                    <img src={item.media_url} alt="Trabalho" style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+                    <div style={{ padding: '1rem' }}><p style={{ margin: 0, fontSize: '0.9rem' }}>{item.description}</p></div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'loja' && (
+              <div className="grid-cards">
+                {products.length === 0 ? <p style={{ color: 'var(--text-secondary)' }}>Nenhum produto à venda.</p> : products.map(prod => (
+                  <div key={prod.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                    {prod.photo_url && <img src={prod.photo_url} alt={prod.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />}
+                    <div style={{ padding: '1rem' }}>
+                      <h3 style={{ fontSize: '1.1rem', margin: '0 0 0.5rem' }}>{prod.name}</h3>
+                      <p style={{ margin: '0 0 0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{prod.description}</p>
+                      <div style={{ fontWeight: 600, color: 'var(--primary-color)', marginBottom: '1rem' }}>R$ {prod.price}</div>
+                      <a href={`https://wa.me/55${(pro.whatsapp||'').replace(/\D/g,'')}?text=Oi! Gostaria de comprar o produto: ${prod.name}`} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ width: '100%', textAlign: 'center', textDecoration: 'none' }}>Comprar pelo WhatsApp</a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'avaliacoes' && (
+              <div className="grid-cards">
+                {reviews.length === 0 ? <p style={{ color: 'var(--text-secondary)' }}>Nenhuma avaliação ainda.</p> : reviews.map(rev => (
+                  <div key={rev.id} className="card">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <div style={{ fontWeight: 600 }}>{rev.client_name}</div>
+                      <div style={{ display: 'flex', color: '#FFD700' }}>
+                        {[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < rev.rating ? '#FFD700' : 'none'} stroke={i < rev.rating ? '#FFD700' : 'var(--text-secondary)'} />)}
+                      </div>
+                    </div>
+                    <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem' }}>"{rev.comment}"</p>
                   </div>
                 ))}
               </div>

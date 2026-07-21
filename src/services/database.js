@@ -22,6 +22,13 @@ export const updateProfileWallet = async (userId, walletId) => {
   return data[0];
 };
 
+export const updateProfile = async (userId, updates) => {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('profiles').update(updates).eq('user_id', userId).select();
+  if (error) { console.error('Erro ao atualizar perfil:', error.message); return null; }
+  return data[0];
+};
+
 export const fetchProsByCity = async (city) => {
   if (!supabase) return [];
   let query = supabase.from('profiles').select('*').eq('role', 'pro');
@@ -104,6 +111,51 @@ export const fetchInventory = async (userId) => {
 export const insertMaterial = async (material, userId) => {
   if (!supabase || !userId) return null;
   const { data, error } = await supabase.from('inventory').insert([{ ...material, user_id: userId }]).select();
+  if (error) { console.error('Erro:', error); return null; }
+  return data[0];
+};
+
+// --- PORTFÓLIO ---
+export const fetchPortfolio = async (userId) => {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.from('portfolio').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  if (error) { console.error('Erro:', error); return []; }
+  return data;
+};
+
+export const insertPortfolio = async (item, userId) => {
+  if (!supabase || !userId) return null;
+  const { data, error } = await supabase.from('portfolio').insert([{ ...item, user_id: userId }]).select();
+  if (error) { console.error('Erro:', error); return null; }
+  return data[0];
+};
+
+// --- PRODUTOS ---
+export const fetchProducts = async (userId) => {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.from('products').select('*').eq('user_id', userId);
+  if (error) { console.error('Erro:', error); return []; }
+  return data;
+};
+
+export const insertProduct = async (product, userId) => {
+  if (!supabase || !userId) return null;
+  const { data, error } = await supabase.from('products').insert([{ ...product, user_id: userId }]).select();
+  if (error) { console.error('Erro:', error); return null; }
+  return data[0];
+};
+
+// --- AVALIAÇÕES ---
+export const fetchReviews = async (userId) => {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.from('reviews').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  if (error) { console.error('Erro:', error); return []; }
+  return data;
+};
+
+export const insertReview = async (review, userId) => {
+  if (!supabase || !userId) return null;
+  const { data, error } = await supabase.from('reviews').insert([{ ...review, user_id: userId }]).select();
   if (error) { console.error('Erro:', error); return null; }
   return data[0];
 };

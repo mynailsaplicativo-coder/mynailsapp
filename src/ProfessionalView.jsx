@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet, Share2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet, Share2, Image, ShoppingBag } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import { createPaymentLink, createSubaccount } from './services/asaas';
@@ -33,9 +33,11 @@ const ProfessionalView = () => {
           </button>
         </div>
 
+        {activeTab === 'perfil' && <PerfilView />}
+        {activeTab === 'portfolio' && <PortfolioView />}
         {activeTab === 'agenda' && <AgendaView />}
         {activeTab === 'clientes' && <ClientesView />}
-        {activeTab === 'servicos' && <ServicosView />}
+        {activeTab === 'catalogo' && <CatalogoView />}
         {activeTab === 'financeiro' && <FinanceiroView />}
         {activeTab === 'estoque' && <EstoqueView />}
         {activeTab === 'recebimentos' && <RecebimentosView />}
@@ -58,9 +60,17 @@ const ProfessionalView = () => {
           <DollarSign size={22} />
           <span>Finanças</span>
         </button>
-        <button className={`bottom-nav-item ${activeTab === 'servicos' ? 'active' : ''}`} onClick={() => setActiveTab('servicos')}>
-          <Scissors size={22} />
-          <span>Serviços</span>
+        <button className={`bottom-nav-item ${activeTab === 'perfil' ? 'active' : ''}`} onClick={() => setActiveTab('perfil')}>
+          <Settings size={22} />
+          <span>Perfil</span>
+        </button>
+        <button className={`bottom-nav-item ${activeTab === 'portfolio' ? 'active' : ''}`} onClick={() => setActiveTab('portfolio')}>
+          <Image size={22} />
+          <span>Portfólio</span>
+        </button>
+        <button className={`bottom-nav-item ${activeTab === 'catalogo' ? 'active' : ''}`} onClick={() => setActiveTab('catalogo')}>
+          <ShoppingBag size={22} />
+          <span>Catálogo</span>
         </button>
         <button className={`bottom-nav-item ${activeTab === 'estoque' ? 'active' : ''}`} onClick={() => setActiveTab('estoque')}>
           <Package size={22} />
@@ -80,6 +90,80 @@ const ProfessionalView = () => {
 };
 
 /* ----- VIEWS ----- */
+
+const PerfilView = () => {
+  const { profile, editProfile } = useAppContext();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: profile?.name || '',
+    photo_url: profile?.photo_url || '',
+    description: profile?.description || '',
+    whatsapp: profile?.whatsapp || ''
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    await editProfile(formData);
+    setLoading(false);
+    alert('Perfil atualizado com sucesso!');
+  };
+
+  return (
+    <div className="animate-in card">
+      <h2 style={{ marginBottom: '1.5rem' }}>Meu Perfil Profissional</h2>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="input-group">
+          <label>Nome do Estúdio / Profissional</label>
+          <input type="text" className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+        </div>
+        <div className="input-group">
+          <label>URL da Foto de Perfil (Link)</label>
+          <input type="url" className="form-input" placeholder="https://..." value={formData.photo_url} onChange={e => setFormData({...formData, photo_url: e.target.value})} />
+        </div>
+        <div className="input-group">
+          <label>Biografia / Descrição</label>
+          <textarea className="form-input" rows="3" placeholder="Conte um pouco sobre seu trabalho..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
+        </div>
+        <div className="input-group">
+          <label>WhatsApp (com DDD)</label>
+          <input type="text" className="form-input" placeholder="21999999999" value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} />
+        </div>
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? 'Salvando...' : 'Salvar Perfil'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+const PortfolioView = () => {
+  const { portfolio, addPortfolio } = useAppContext();
+  const [isAdding, setIsAdding] = useState(false);
+  
+  return (
+    <div className="animate-in">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2>Meu Portfólio</h2>
+        <button className="btn btn-outline" onClick={() => setIsAdding(true)}><Plus size={18} /> Nova Foto</button>
+      </div>
+
+      {isAdding && <NewPortfolioModal onClose={() => setIsAdding(false)} onSave={addPortfolio} />}
+
+      <div className="grid-cards">
+        {portfolio.map(item => (
+          <div key={item.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <img src={item.media_url} alt="Trabalho" style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+            <div style={{ padding: '1rem' }}>
+              <p style={{ margin: 0, fontSize: '0.9rem' }}>{item.description}</p>
+            </div>
+          </div>
+        ))}
+        {portfolio.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>Nenhum trabalho adicionado ainda.</p>}
+      </div>
+    </div>
+  );
+};
 
 const RecebimentosView = () => {
   const { walletId, setWalletId } = useAppContext();
@@ -288,46 +372,83 @@ const AnamneseForm = ({ onBack }) => {
   );
 };
 
-const ServicosView = () => {
-  const { services, addService } = useAppContext();
-  const [isAdding, setIsAdding] = useState(false);
+const CatalogoView = () => {
+  const { services, addService, products, addProduct } = useAppContext();
+  const [isAddingService, setIsAddingService] = useState(false);
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [tab, setTab] = useState('servicos'); // 'servicos' ou 'produtos'
+
   const hands = services.filter(s => s.category === 'Mãos');
   const feet = services.filter(s => s.category === 'Pés');
 
   return (
     <div className="animate-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2>Catálogo de Serviços</h2>
-        <button className="btn btn-outline" onClick={() => setIsAdding(true)}><Plus size={18} /> Novo Serviço</button>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+        <button className={`btn ${tab === 'servicos' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTab('servicos')} style={{ flex: 1 }}>Serviços</button>
+        <button className={`btn ${tab === 'produtos' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTab('produtos')} style={{ flex: 1 }}>Produtos (Loja)</button>
       </div>
-      
-      {isAdding && <NewServiceModal onClose={() => setIsAdding(false)} onSave={addService} />}
 
-      <h3 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>Mãos</h3>
-      <div className="grid-cards" style={{ marginBottom: '2rem' }}>
-        {hands.map((svc) => (
-          <div key={svc.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem' }}>
-            <h3 style={{ fontSize: '1rem' }}>{svc.name}</h3>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              <span>{svc.duration}</span>
-              <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>R$ {svc.price}</span>
-            </div>
+      {tab === 'servicos' && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2>Serviços</h2>
+            <button className="btn btn-outline" onClick={() => setIsAddingService(true)}><Plus size={18} /> Novo Serviço</button>
           </div>
-        ))}
-      </div>
-      
-      <h3 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>Pés</h3>
-      <div className="grid-cards">
-        {feet.map((svc) => (
-          <div key={svc.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem' }}>
-            <h3 style={{ fontSize: '1rem' }}>{svc.name}</h3>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              <span>{svc.duration}</span>
-              <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>R$ {svc.price}</span>
-            </div>
+          
+          {isAddingService && <NewServiceModal onClose={() => setIsAddingService(false)} onSave={addService} />}
+
+          <h3 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>Mãos</h3>
+          <div className="grid-cards" style={{ marginBottom: '2rem' }}>
+            {hands.map((svc) => (
+              <div key={svc.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem' }}>
+                <h3 style={{ fontSize: '1rem' }}>{svc.name}</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  <span>{svc.duration}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>R$ {svc.price}</span>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+          
+          <h3 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>Pés</h3>
+          <div className="grid-cards">
+            {feet.map((svc) => (
+              <div key={svc.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem' }}>
+                <h3 style={{ fontSize: '1rem' }}>{svc.name}</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  <span>{svc.duration}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>R$ {svc.price}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {tab === 'produtos' && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2>Lojinha</h2>
+            <button className="btn btn-outline" onClick={() => setIsAddingProduct(true)}><Plus size={18} /> Novo Produto</button>
+          </div>
+
+          {isAddingProduct && <NewProductModal onClose={() => setIsAddingProduct(false)} onSave={addProduct} />}
+
+          <div className="grid-cards">
+            {products.map(prod => (
+              <div key={prod.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                {prod.photo_url && <img src={prod.photo_url} alt={prod.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />}
+                <div style={{ padding: '1rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', margin: '0 0 0.5rem' }}>{prod.name}</h3>
+                  <p style={{ margin: '0 0 0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{prod.description}</p>
+                  <div style={{ fontWeight: 600, color: 'var(--primary-color)' }}>R$ {prod.price}</div>
+                </div>
+              </div>
+            ))}
+            {products.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>Nenhum produto cadastrado para venda.</p>}
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -600,7 +721,19 @@ const NewServiceModal = ({ onClose, onSave }) => {
   return (
     <ModalWrapper title="Novo Serviço" onClose={onClose}>
       <form onSubmit={handleSubmit}>
-        <div className="input-group"><label>Nome</label><input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} required /></div>
+        <div className="input-group">
+          <label>Nome</label>
+          <input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} list="service-suggestions" required />
+          <datalist id="service-suggestions">
+            <option value="Manicure Simples" />
+            <option value="Pedicure Simples" />
+            <option value="Alongamento em Gel" />
+            <option value="Blindagem" />
+            <option value="Esmaltação em Gel" />
+            <option value="Manutenção de Gel" />
+            <option value="Spa dos Pés" />
+          </datalist>
+        </div>
         <div className="input-group"><label>Preço</label><input type="number" className="form-input" value={price} onChange={e => setPrice(e.target.value)} required /></div>
         <div className="input-group"><label>Categoria</label>
           <select className="form-input" value={category} onChange={e => setCategory(e.target.value)}><option>Mãos</option><option>Pés</option></select>
@@ -614,12 +747,23 @@ const NewServiceModal = ({ onClose, onSave }) => {
 const NewTransactionModal = ({ onClose, onSave }) => {
   const [desc, setDesc] = useState('');
   const [amount, setAmount] = useState('');
-  const [type, setType] = useState('income');
+  const [type, setType] = useState('expense');
   const handleSubmit = (e) => { e.preventDefault(); onSave({ description: desc, amount: parseFloat(amount), type, date: new Date().toISOString().split('T')[0] }); onClose(); };
   return (
     <ModalWrapper title="Nova Transação" onClose={onClose}>
       <form onSubmit={handleSubmit}>
-        <div className="input-group"><label>Descrição</label><input type="text" className="form-input" value={desc} onChange={e => setDesc(e.target.value)} required /></div>
+        <div className="input-group">
+          <label>Descrição</label>
+          <input type="text" className="form-input" value={desc} onChange={e => setDesc(e.target.value)} list="tx-suggestions" required />
+          <datalist id="tx-suggestions">
+            <option value="Compra de Esmaltes" />
+            <option value="Conta de Luz" />
+            <option value="Aluguel do Espaço" />
+            <option value="Internet" />
+            <option value="Compra de Lixas e Acetona" />
+            <option value="Manutenção da Estufa/Motor" />
+          </datalist>
+        </div>
         <div className="input-group"><label>Valor (R$)</label><input type="number" className="form-input" value={amount} onChange={e => setAmount(e.target.value)} required /></div>
         <div className="input-group"><label>Tipo</label>
           <select className="form-input" value={type} onChange={e => setType(e.target.value)}><option value="income">Entrada (Receita)</option><option value="expense">Saída (Despesa)</option></select>
@@ -638,7 +782,20 @@ const NewMaterialModal = ({ onClose, onSave }) => {
   return (
     <ModalWrapper title="Novo Material" onClose={onClose}>
       <form onSubmit={handleSubmit}>
-        <div className="input-group"><label>Nome do Produto</label><input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} required /></div>
+        <div className="input-group">
+          <label>Nome do Produto</label>
+          <input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} list="mat-suggestions" required />
+          <datalist id="mat-suggestions">
+            <option value="Algodão (Pacote)" />
+            <option value="Acetona (Litro)" />
+            <option value="Palitos de Laranjeira" />
+            <option value="Lixas (Pacote)" />
+            <option value="Base Fortalecedora" />
+            <option value="Top Coat" />
+            <option value="Gel Construtor (Pote)" />
+            <option value="Luvas Descartáveis (Caixa)" />
+          </datalist>
+        </div>
         <div className="input-group"><label>Quantidade</label><input type="text" className="form-input" value={quantity} onChange={e => setQty(e.target.value)} required /></div>
         <div className="input-group"><label>Status</label>
           <select className="form-input" value={status} onChange={e => setStatus(e.target.value)}><option value="OK">OK (Tem bastante)</option><option value="Baixo">Baixo (Comprar logo)</option></select>
@@ -659,6 +816,40 @@ const NewClientModal = ({ onClose, onSave }) => {
         <div className="input-group"><label>Nome</label><input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} required /></div>
         <div className="input-group"><label>Telefone</label><input type="tel" className="form-input" value={phone} onChange={e => setPhone(e.target.value)} required /></div>
         <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salvar Cliente</button>
+      </form>
+    </ModalWrapper>
+  );
+};
+
+const NewPortfolioModal = ({ onClose, onSave }) => {
+  const [url, setUrl] = useState('');
+  const [desc, setDesc] = useState('');
+  const handleSubmit = (e) => { e.preventDefault(); onSave({ media_url: url, type: 'photo', description: desc }); onClose(); };
+  return (
+    <ModalWrapper title="Adicionar Trabalho" onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <div className="input-group"><label>URL da Imagem</label><input type="url" className="form-input" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." required /></div>
+        <div className="input-group"><label>Legenda / Descrição</label><textarea className="form-input" value={desc} onChange={e => setDesc(e.target.value)}></textarea></div>
+        <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salvar</button>
+      </form>
+    </ModalWrapper>
+  );
+};
+
+const NewProductModal = ({ onClose, onSave }) => {
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [desc, setDesc] = useState('');
+  const [url, setUrl] = useState('');
+  const handleSubmit = (e) => { e.preventDefault(); onSave({ name, price: parseFloat(price) || price, description: desc, photo_url: url }); onClose(); };
+  return (
+    <ModalWrapper title="Novo Produto" onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <div className="input-group"><label>Nome</label><input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} required /></div>
+        <div className="input-group"><label>Preço (R$)</label><input type="number" className="form-input" value={price} onChange={e => setPrice(e.target.value)} required /></div>
+        <div className="input-group"><label>Descrição</label><textarea className="form-input" value={desc} onChange={e => setDesc(e.target.value)}></textarea></div>
+        <div className="input-group"><label>URL da Imagem</label><input type="url" className="form-input" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." /></div>
+        <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salvar Produto</button>
       </form>
     </ModalWrapper>
   );
