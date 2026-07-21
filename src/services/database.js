@@ -177,7 +177,15 @@ export const fetchInventory = async (userId) => {
 
 export const insertMaterial = async (material, userId) => {
   if (!supabase || !userId) return { error: 'Usuário não autenticado' };
-  const { data, error } = await supabase.from('inventory').insert([{ ...material, user_id: userId }]).select();
+  const validData = {
+    user_id: userId,
+    name: material.name,
+    current: material.current,
+    quantity: material.current, // Some manual schemas might use 'quantity' instead of 'current'
+    min: material.min,
+    status: material.status
+  };
+  const { data, error } = await supabase.from('inventory').insert([validData]).select();
   if (error) { console.error('Erro:', error); return { error: error.message }; }
   return data[0];
 };
