@@ -7,6 +7,7 @@ import Auth from './Auth';
 import Onboarding from './Onboarding';
 import ProfessionalView from './ProfessionalView';
 import ClientView from './ClientView';
+import ProPublicPage from './ProPublicPage';
 import { useAppContext } from './context/AppContext';
 import './App.css';
 
@@ -46,6 +47,9 @@ function App() {
         {/* Usamos as páginas padrão do Clerk encapsuladas no nosso Auth.jsx */}
         <Route path="/login/*" element={<Auth isLogin={true} />} />
         <Route path="/cadastro/*" element={<Auth isLogin={false} />} />
+        
+        {/* Rota Pública do Perfil da Manicure (Portfólio / Link de Agendamento) */}
+        <Route path="/pro/:id" element={<ProPublicPage />} />
         
         <Route path="/onboarding" element={
           <ProtectedRoute>

@@ -34,76 +34,76 @@ export const fetchProsByCity = async (city) => {
 };
 
 // --- AGENDAMENTOS ---
-export const fetchAppointments = async () => {
-  if (!supabase) return [];
-  const { data, error } = await supabase.from('appointments').select('*');
+export const fetchAppointments = async (userId) => {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.from('appointments').select('*').eq('user_id', userId);
   if (error) { console.error('Erro:', error); return []; }
   return data;
 };
 
-export const insertAppointment = async (appointment) => {
-  if (!supabase) return null;
-  const { data, error } = await supabase.from('appointments').insert([appointment]).select();
+export const insertAppointment = async (appointment, userId) => {
+  if (!supabase || !userId) return null;
+  const { data, error } = await supabase.from('appointments').insert([{ ...appointment, user_id: userId }]).select();
   if (error) { console.error('Erro:', error); return null; }
   return data[0];
 };
 
 // --- SERVIÇOS (Catálogo) ---
-export const fetchServices = async () => {
-  if (!supabase) return [];
-  const { data, error } = await supabase.from('services').select('*');
+export const fetchServices = async (userId) => {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.from('services').select('*').eq('user_id', userId);
   if (error) { console.error('Erro:', error); return []; }
   return data;
 };
 
-export const insertService = async (service) => {
-  if (!supabase) return null;
-  const { data, error } = await supabase.from('services').insert([service]).select();
+export const insertService = async (service, userId) => {
+  if (!supabase || !userId) return null;
+  const { data, error } = await supabase.from('services').insert([{ ...service, user_id: userId }]).select();
   if (error) { console.error('Erro:', error); return null; }
   return data[0];
 };
 
 // --- CLIENTES ---
-export const fetchClients = async () => {
-  if (!supabase) return [];
-  const { data, error } = await supabase.from('clients').select('*');
+export const fetchClients = async (userId) => {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.from('clients').select('*').eq('user_id', userId);
   if (error) { console.error('Erro:', error); return []; }
   return data;
 };
 
-export const insertClient = async (client) => {
-  if (!supabase) return null;
-  const { data, error } = await supabase.from('clients').insert([client]).select();
+export const insertClient = async (client, userId) => {
+  if (!supabase || !userId) return null;
+  const { data, error } = await supabase.from('clients').insert([{ ...client, user_id: userId }]).select();
   if (error) { console.error('Erro:', error); return null; }
   return data[0];
 };
 
 // --- FINANCEIRO ---
-export const fetchTransactions = async () => {
-  if (!supabase) return [];
-  const { data, error } = await supabase.from('transactions').select('*');
+export const fetchTransactions = async (userId) => {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.from('transactions').select('*').eq('user_id', userId);
   if (error) { console.error('Erro:', error); return []; }
   return data;
 };
 
-export const insertTransaction = async (transaction) => {
-  if (!supabase) return null;
-  const { data, error } = await supabase.from('transactions').insert([transaction]).select();
+export const insertTransaction = async (transaction, userId) => {
+  if (!supabase || !userId) return null;
+  const { data, error } = await supabase.from('transactions').insert([{ ...transaction, user_id: userId }]).select();
   if (error) { console.error('Erro:', error); return null; }
   return data[0];
 };
 
 // --- ESTOQUE ---
-export const fetchInventory = async () => {
-  if (!supabase) return [];
-  const { data, error } = await supabase.from('inventory').select('*');
+export const fetchInventory = async (userId) => {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.from('inventory').select('*').eq('user_id', userId);
   if (error) { console.error('Erro:', error); return []; }
   return data;
 };
 
-export const insertMaterial = async (material) => {
-  if (!supabase) return null;
-  const { data, error } = await supabase.from('inventory').insert([material]).select();
+export const insertMaterial = async (material, userId) => {
+  if (!supabase || !userId) return null;
+  const { data, error } = await supabase.from('inventory').insert([{ ...material, user_id: userId }]).select();
   if (error) { console.error('Erro:', error); return null; }
   return data[0];
 };

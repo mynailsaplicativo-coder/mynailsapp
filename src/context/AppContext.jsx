@@ -51,11 +51,11 @@ export const AppProvider = ({ children }) => {
 
         // Tenta buscar dados reais do Supabase (para Profissionais)
         const [appts, svcs, inv, tx, cls] = await Promise.all([
-          fetchAppointments(),
-          fetchServices(),
-          fetchInventory(),
-          fetchTransactions(),
-          fetchClients()
+          fetchAppointments(user.id),
+          fetchServices(user.id),
+          fetchInventory(user.id),
+          fetchTransactions(user.id),
+          fetchClients(user.id)
         ]);
 
         setAppointments(appts || []);
@@ -78,27 +78,27 @@ export const AppProvider = ({ children }) => {
 
   // Actions (Agora salvam na nuvem e depois atualizam o estado local)
   const addAppointment = async (appointment) => {
-    const data = await insertAppointment(appointment);
+    const data = await insertAppointment(appointment, user.id);
     if (data) setAppointments([...appointments, data]);
   };
 
   const addService = async (service) => {
-    const data = await insertService(service);
+    const data = await insertService(service, user.id);
     if (data) setServices([...services, data]);
   };
 
   const addMaterial = async (material) => {
-    const data = await insertMaterial(material);
+    const data = await insertMaterial(material, user.id);
     if (data) setInventory([...inventory, data]);
   };
 
   const addTransaction = async (transaction) => {
-    const data = await insertTransaction(transaction);
+    const data = await insertTransaction(transaction, user.id);
     if (data) setTransactions([...transactions, data]);
   };
 
   const addClient = async (client) => {
-    const data = await insertClient(client);
+    const data = await insertClient(client, user.id);
     if (data) setClients([...clients, data]);
   };
 

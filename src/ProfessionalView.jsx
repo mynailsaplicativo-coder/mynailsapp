@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet, Share2 } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { UserButton } from '@clerk/clerk-react';
 import { createPaymentLink, createSubaccount } from './services/asaas';
@@ -144,9 +144,26 @@ const RecebimentosView = () => {
 };
 
 const AgendaView = () => {
-  const { appointments } = useAppContext();
+  const { appointments, profile } = useAppContext();
+  
+  const handleShare = () => {
+    const link = `https://mynailsapp.com.br/pro/${profile?.user_id}`;
+    navigator.clipboard.writeText(link);
+    alert(`Link copiado! Envie para suas clientes:\n${link}`);
+  };
+
   return (
     <div className="animate-in">
+      <div className="card" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--primary-color)', color: 'white' }}>
+        <div>
+          <h3 style={{ marginBottom: '0.25rem' }}>Seu Link de Agendamento</h3>
+          <p style={{ opacity: 0.9, fontSize: '0.9rem' }}>Envie no WhatsApp ou coloque no Instagram para as clientes agendarem sozinhas.</p>
+        </div>
+        <button className="btn" style={{ backgroundColor: 'white', color: 'var(--primary-color)', display: 'flex', gap: '0.5rem', alignItems: 'center' }} onClick={handleShare}>
+          <Share2 size={18} /> Copiar Link
+        </button>
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2>Agenda de Hoje</h2>
         <span className="badge badge-success">Confirmação Automática Ativada</span>
@@ -194,7 +211,7 @@ const ClientesView = () => {
                   <th style={{ padding: '1rem' }}>Nome</th>
                   <th style={{ padding: '1rem' }}>Telefone</th>
                   <th style={{ padding: '1rem' }}>Último Serviço</th>
-                  <th style={{ padding: '1rem' }}>Pontos (Fidelidade)</th>
+                  <th style={{ padding: '1rem' }}>Data da Volta</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,8 +219,14 @@ const ClientesView = () => {
                   <tr key={c.id} style={{ borderTop: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '1rem', fontWeight: 500 }}>{c.name}</td>
                     <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{c.phone}</td>
-                    <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{c.lastService}</td>
-                    <td style={{ padding: '1rem' }}><span className="badge badge-primary">{c.points} selos</span></td>
+                    <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{c.lastService || '-'}</td>
+                    <td style={{ padding: '1rem' }}>
+                      {c.return_date ? (
+                        <span className="badge badge-primary">{new Date(c.return_date).toLocaleDateString()}</span>
+                      ) : (
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>Não agendado</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
