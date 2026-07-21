@@ -92,8 +92,8 @@ export const AppProvider = ({ children }) => {
   // Actions (Agora salvam na nuvem e depois atualizam o estado local)
   const addAppointment = async (appointment) => {
     const data = await insertAppointment(appointment, user.id);
-    if (data) setAppointments([...appointments, data]);
-    else alert('Erro ao salvar agendamento no banco de dados. Verifique a conexão ou a estrutura da tabela.');
+    if (data && !data.error) setAppointments([...appointments, data]);
+    else alert(`Erro ao salvar agendamento: ${data?.error || 'Desconhecido'}`);
   };
 
   const addService = async (service) => {
@@ -104,8 +104,8 @@ export const AppProvider = ({ children }) => {
 
   const addMaterial = async (material) => {
     const data = await insertMaterial(material, user.id);
-    if (data) setInventory([...inventory, data]);
-    else alert('Erro ao salvar material no banco de dados.');
+    if (data && !data.error) setInventory([...inventory, data]);
+    else alert(`Erro ao salvar material: ${data?.error || 'Desconhecido'}`);
   };
 
   const addTransaction = async (transaction) => {
@@ -116,8 +116,8 @@ export const AppProvider = ({ children }) => {
 
   const addClient = async (client) => {
     const data = await insertClient(client, user.id);
-    if (data) setClients([...clients, data]);
-    else alert('Erro ao salvar cliente.');
+    if (data && !data.error) setClients([...clients, data]);
+    else alert(`Erro ao salvar cliente: ${data?.error || 'Desconhecido'}`);
   };
 
   const addPortfolio = async (item) => {

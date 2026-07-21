@@ -50,8 +50,17 @@ export const fetchAppointments = async (userId) => {
 
 export const insertAppointment = async (appointment, userId) => {
   if (!supabase || !userId) return null;
-  const { data, error } = await supabase.from('appointments').insert([{ ...appointment, user_id: userId }]).select();
-  if (error) { console.error('Erro:', error); return null; }
+  const validData = {
+    user_id: userId,
+    client: appointment.client,
+    service: appointment.service,
+    date: appointment.date || new Date().toISOString().split('T')[0], // add default date if missing
+    time: appointment.time,
+    status: appointment.status,
+    return_date: appointment.return_date || null
+  };
+  const { data, error } = await supabase.from('appointments').insert([validData]).select();
+  if (error) { console.error('Erro no agendamento:', error); return { error: error.message }; }
   return data[0];
 };
 
@@ -131,8 +140,15 @@ export const fetchClients = async (userId) => {
 
 export const insertClient = async (client, userId) => {
   if (!supabase || !userId) return null;
-  const { data, error } = await supabase.from('clients').insert([{ ...client, user_id: userId }]).select();
-  if (error) { console.error('Erro:', error); return null; }
+  const validData = {
+    user_id: userId,
+    name: client.name,
+    phone: client.phone,
+    frequency: client.frequency || null,
+    notes: client.notes || null
+  };
+  const { data, error } = await supabase.from('clients').insert([validData]).select();
+  if (error) { console.error('Erro no cliente:', error); return { error: error.message }; }
   return data[0];
 };
 
@@ -160,9 +176,9 @@ export const fetchInventory = async (userId) => {
 };
 
 export const insertMaterial = async (material, userId) => {
-  if (!supabase || !userId) return null;
+  if (!supabase || !userId) return { error: 'Usuário não autenticado' };
   const { data, error } = await supabase.from('inventory').insert([{ ...material, user_id: userId }]).select();
-  if (error) { console.error('Erro:', error); return null; }
+  if (error) { console.error('Erro:', error); return { error: error.message }; }
   return data[0];
 };
 
