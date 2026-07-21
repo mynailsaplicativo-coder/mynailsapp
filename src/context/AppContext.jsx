@@ -93,41 +93,49 @@ export const AppProvider = ({ children }) => {
   const addAppointment = async (appointment) => {
     const data = await insertAppointment(appointment, user.id);
     if (data) setAppointments([...appointments, data]);
+    else alert('Erro ao salvar agendamento no banco de dados. Verifique a conexão ou a estrutura da tabela.');
   };
 
   const addService = async (service) => {
     const data = await insertService(service, user.id);
     if (data) setServices([...services, data]);
+    else alert('Erro ao salvar serviço no banco de dados. Você executou o ALTER TABLE services ADD COLUMN category no Supabase?');
   };
 
   const addMaterial = async (material) => {
     const data = await insertMaterial(material, user.id);
     if (data) setInventory([...inventory, data]);
+    else alert('Erro ao salvar material no banco de dados.');
   };
 
   const addTransaction = async (transaction) => {
     const data = await insertTransaction(transaction, user.id);
     if (data) setTransactions([...transactions, data]);
+    else alert('Erro ao salvar transação.');
   };
 
   const addClient = async (client) => {
     const data = await insertClient(client, user.id);
     if (data) setClients([...clients, data]);
+    else alert('Erro ao salvar cliente.');
   };
 
   const addPortfolio = async (item) => {
     const data = await insertPortfolio(item, user.id);
     if (data) setPortfolio([data, ...portfolio]);
+    else alert('Erro ao salvar foto no banco de dados.');
   };
 
   const addProduct = async (product) => {
     const data = await insertProduct(product, user.id);
     if (data) setProducts([...products, data]);
+    else alert('Erro ao salvar produto no banco de dados. Verifique a tabela products.');
   };
 
   const addReview = async (review) => {
     const data = await insertReview(review, user.id);
     if (data) setReviews([data, ...reviews]);
+    else alert('Erro ao salvar avaliação.');
   };
 
   const editProfile = async (updates) => {
