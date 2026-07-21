@@ -787,7 +787,7 @@ const NewMaterialModal = ({ onClose, onSave }) => {
   const [name, setName] = useState('');
   const [quantity, setQty] = useState('');
   const [status, setStatus] = useState('OK');
-  const handleSubmit = (e) => { e.preventDefault(); onSave({ name, quantity, status }); onClose(); };
+  const handleSubmit = (e) => { e.preventDefault(); onSave({ name, current: parseInt(quantity) || 0, min: 0, status }); onClose(); };
   return (
     <ModalWrapper title="Novo Material" onClose={onClose}>
       <form onSubmit={handleSubmit}>
