@@ -1,19 +1,12 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, LogOut } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
-import { signOutUser } from './services/auth';
+import { UserButton } from '@clerk/clerk-react';
 import { createPaymentLink } from './services/asaas';
-import { useNavigate } from 'react-router-dom';
 
 const ProfessionalView = () => {
   const [activeTab, setActiveTab] = useState('agenda');
   const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await signOutUser();
-    navigate('/');
-  };
 
   return (
     <div className="app-container">
@@ -23,9 +16,7 @@ const ProfessionalView = () => {
           <Sparkles color="var(--primary-color)" size={24} />
           <h1 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--primary-color)' }}>My Nails Studio</h1>
         </div>
-        <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-          <LogOut size={20} />
-        </button>
+        <UserButton />
       </div>
 
       {/* Main Content Area */}
