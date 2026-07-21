@@ -5,7 +5,8 @@ import {
   fetchServices, insertService,
   fetchInventory, insertMaterial,
   fetchTransactions, insertTransaction,
-  fetchClients, insertClient
+  fetchClients, insertClient,
+  fetchProfile
 } from '../services/database';
 
 const AppContext = createContext();
@@ -21,6 +22,7 @@ export const AppProvider = ({ children }) => {
   const [trialDaysLeft, setTrialDaysLeft] = useState(15);
   const [walletId, setWalletId] = useState(null); // Asaas Wallet ID para Split
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null); // Perfis do Marketplace
 
   useEffect(() => {
     // Calcula os dias de teste baseados na data de criação da conta no Clerk
@@ -38,7 +40,16 @@ export const AppProvider = ({ children }) => {
     const loadData = async () => {
       setLoading(true);
       try {
-        // Tenta buscar dados reais do Supabase
+        if (!user) return;
+        
+        // 1. Busca o perfil do usuário atual
+        const userProfile = await fetchProfile(user.id);
+        if (userProfile) {
+          setProfile(userProfile);
+          if (userProfile.wallet_id) setWalletId(userProfile.wallet_id);
+        }
+
+        // Tenta buscar dados reais do Supabase (para Profissionais)
         const [appts, svcs, inv, tx, cls] = await Promise.all([
           fetchAppointments(),
           fetchServices(),
@@ -60,10 +71,10 @@ export const AppProvider = ({ children }) => {
     };
 
     // Só tenta carregar do banco quando o Clerk já resolveu se o user tá logado ou não
-    if (isLoaded) {
+    if (isLoaded && user) {
       loadData();
     }
-  }, [isLoaded]);
+  }, [isLoaded, user]);
 
   // Actions (Agora salvam na nuvem e depois atualizam o estado local)
   const addAppointment = async (appointment) => {
@@ -98,7 +109,7 @@ export const AppProvider = ({ children }) => {
 
   return (
     <AppContext.Provider value={{ 
-      user, isPremium, upgradeToPremium, loading, trialDaysLeft,
+      user, profile, setProfile, isPremium, upgradeToPremium, loading, trialDaysLeft,
       walletId, setWalletId,
       appointments, addAppointment, 
       services, addService,

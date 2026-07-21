@@ -1,5 +1,38 @@
 import { supabase } from '../lib/supabase';
 
+// --- PROFILES ---
+export const fetchProfile = async (userId) => {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+  if (error) { console.warn('Perfil não encontrado:', error.message); return null; }
+  return data;
+};
+
+export const insertProfile = async (profile) => {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('profiles').insert([profile]).select();
+  if (error) { console.error('Erro:', error.message); return null; }
+  return data[0];
+};
+
+export const updateProfileWallet = async (userId, walletId) => {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('profiles').update({ wallet_id: walletId }).eq('user_id', userId).select();
+  if (error) { console.error('Erro:', error.message); return null; }
+  return data[0];
+};
+
+export const fetchProsByCity = async (city) => {
+  if (!supabase) return [];
+  let query = supabase.from('profiles').select('*').eq('role', 'pro');
+  if (city) {
+    query = query.ilike('city', `%${city}%`);
+  }
+  const { data, error } = await query;
+  if (error) { console.error('Erro:', error.message); return []; }
+  return data;
+};
+
 // --- AGENDAMENTOS ---
 export const fetchAppointments = async () => {
   if (!supabase) return [];

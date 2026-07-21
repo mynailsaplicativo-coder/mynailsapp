@@ -3,6 +3,7 @@ import { Calendar, Star, Heart, Sparkles, Search, MapPin, Image as ImageIcon, Tr
 import { useAppContext } from './context/AppContext';
 import { UserButton } from '@clerk/clerk-react';
 import { createSplitPayment } from './services/asaas';
+import { fetchProsByCity } from './services/database';
 
 const ClientView = () => {
   const [activeTab, setActiveTab] = useState('explorar'); // explorar, inspiracoes, fidelidade
@@ -42,17 +43,33 @@ const ClientView = () => {
 };
 
 const HomeTab = () => {
+  const { profile } = useAppContext();
   const [selectedPro, setSelectedPro] = useState(null);
+  const [searchCity, setSearchCity] = useState(profile?.city || '');
+  const [pros, setPros] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    const loadPros = async () => {
+      setLoading(true);
+      const data = await fetchProsByCity(searchCity);
+      setPros(data);
+      setLoading(false);
+    };
+    loadPros();
+  }, [searchCity]);
 
   return (
     <div className="animate-in" style={{ paddingBottom: '100px' }}>
       <header style={{ padding: '2rem 1.5rem', backgroundColor: 'var(--secondary-color)', color: 'white' }}>
         <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>O que vamos fazer hoje? 💅</h1>
         <div style={{ position: 'relative' }}>
-          <Search size={20} color="var(--text-secondary)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+          <MapPin size={20} color="var(--text-secondary)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
           <input 
             type="text" 
-            placeholder="Buscar por Blindagem, Gel X, Francesinha..." 
+            placeholder="Buscar por Cidade..." 
+            value={searchCity}
+            onChange={(e) => setSearchCity(e.target.value)}
             style={{ width: '100%', padding: '1rem 1rem 1rem 3rem', borderRadius: '100px', border: 'none', fontSize: '1rem' }}
           />
         </div>
@@ -83,29 +100,24 @@ const HomeTab = () => {
 
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h2 style={{ fontSize: '1.25rem' }}>Top Manicures (Ranking)</h2>
-            <span style={{ fontSize: '0.85rem', color: 'var(--primary-color)', fontWeight: 600 }}>Ver Todas</span>
+            <h2 style={{ fontSize: '1.25rem' }}>Top Manicures ({searchCity || 'Todas'})</h2>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <NailTechCard 
-              name="Studio Marina Nails" 
-              rating="5.0" 
-              reviews="240"
-              distance="1.2 km"
-              tags={['Fibra de Vidro', 'Nail Art 3D']}
-              image="https://images.unsplash.com/photo-1519014816548-bf5fe059c98b?auto=format&fit=crop&q=80&w=400&h=200"
-              onClick={() => setSelectedPro("Studio Marina Nails")}
-            />
-            <NailTechCard 
-              name="Beauty by Carol" 
-              rating="4.8" 
-              reviews="185"
-              distance="2.5 km"
-              tags={['Esmaltação em Gel', 'Spa']}
-              image="https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&q=80&w=400&h=200"
-              onClick={() => setSelectedPro("Beauty by Carol")}
-            />
+            {loading ? <p>Buscando profissionais...</p> : pros.length === 0 ? <p>Nenhuma profissional encontrada nesta cidade.</p> : null}
+            
+            {!loading && pros.map(pro => (
+              <NailTechCard 
+                key={pro.id}
+                name={pro.name || 'Profissional'} 
+                rating="5.0" 
+                reviews="Novo"
+                distance={`${pro.city} - ${pro.state}`}
+                tags={['Manicure', pro.neighborhood || 'Bairro não informado']}
+                image="https://images.unsplash.com/photo-1519014816548-bf5fe059c98b?auto=format&fit=crop&q=80&w=400&h=200"
+                onClick={() => setSelectedPro(pro)}
+              />
+            ))}
           </div>
         </section>
       </main>
@@ -215,15 +227,15 @@ const BookingModal = ({ pro, onClose }) => {
         // Se a manicure conectou a conta, walletId vai existir e o split acontece.
         // Se não, o dinheiro cai na conta principal da plataforma.
         const invoiceUrl = await createSplitPayment({
-          clientName: 'Cliente My Nails',
+          clientName: profile?.name || 'Cliente My Nails',
           clientEmail: 'cliente@mynails.app.br',
           value: price,
-          description: `Pagamento de ${service} com ${pro}`,
-          splitWalletId: walletId
+          description: `Pagamento de ${service} com ${pro.name}`,
+          splitWalletId: pro.wallet_id // Envia pra manicure específica!
         });
         
-        addAppointment({ client: 'Você (Cliente App)', service: `${service} com ${pro}`, time, status: 'Aguardando Pagamento' });
-        alert(`Tudo certo! Redirecionando para o pagamento seguro.\n\nSimulação: O dinheiro (R$ ${price}) será dividido e enviado diretamente para a conta Asaas da Manicure (Wallet: ${walletId || 'Nenhuma/Conta Principal'})`);
+        addAppointment({ client: profile?.name || 'Você', service: `${service} com ${pro.name}`, time, status: 'Aguardando Pagamento' });
+        alert(`Redirecionando para pagamento!\nSimulação: R$ ${price} será dividido e enviado para a conta Asaas da ${pro.name} (Wallet: ${pro.wallet_id || 'Principal'})`);
         window.open(invoiceUrl, '_blank');
         onClose();
       } catch (err) {
@@ -240,7 +252,7 @@ const BookingModal = ({ pro, onClose }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
             <h2 style={{ fontSize: '1.25rem' }}>Agendar com</h2>
-            <p style={{ color: 'var(--primary-color)', fontWeight: 600 }}>{pro}</p>
+            <p style={{ color: 'var(--primary-color)', fontWeight: 600 }}>{pro.name}</p>
           </div>
           <button onClick={onClose}><X size={24} color="var(--text-secondary)" /></button>
         </div>

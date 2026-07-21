@@ -8,6 +8,8 @@ const ProfessionalView = () => {
   const [activeTab, setActiveTab] = useState('agenda');
   const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
 
+  const { profile } = useAppContext();
+
   return (
     <div className="app-container">
       {/* Top Header */}
@@ -23,8 +25,8 @@ const ProfessionalView = () => {
       <div className="app-content">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Olá, Marina 👋</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Resumo do seu estúdio.</p>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Olá, {profile?.name || 'Marina'} 👋</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{profile?.city ? `${profile.city} - ${profile.state}` : 'Resumo do seu estúdio.'}</p>
           </div>
           <button className="btn btn-primary" onClick={() => setIsNewBookingOpen(true)} style={{ padding: '0.5rem 1rem' }}>
             <Plus size={18} /> Novo

@@ -4,8 +4,10 @@ import { AppProvider } from './context/AppContext';
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
 import Landing from './Landing';
 import Auth from './Auth';
+import Onboarding from './Onboarding';
 import ProfessionalView from './ProfessionalView';
 import ClientView from './ClientView';
+import { useAppContext } from './context/AppContext';
 import './App.css';
 
 // Componente para proteger rotas usando Clerk
@@ -22,6 +24,18 @@ const ProtectedRoute = ({ children }) => {
   );
 };
 
+const ProfileGuard = ({ children, allowedRole }) => {
+  const { profile, loading } = useAppContext();
+  
+  if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
+  if (!profile) return <Navigate to="/onboarding" replace />;
+  if (allowedRole && profile.role !== allowedRole) {
+    return <Navigate to={profile.role === 'pro' ? '/app/pro' : '/app/cliente'} replace />;
+  }
+  
+  return children;
+};
+
 function App() {
   return (
     <AppProvider>
@@ -33,20 +47,30 @@ function App() {
         <Route path="/login/*" element={<Auth isLogin={true} />} />
         <Route path="/cadastro/*" element={<Auth isLogin={false} />} />
         
-        {/* Rotas Privadas (App) protegidas pelo Clerk */}
+        <Route path="/onboarding" element={
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        } />
+        
+        {/* Rotas Privadas (App) protegidas pelo Clerk e ProfileGuard */}
         <Route path="/app/pro" element={
           <ProtectedRoute>
-            <div className="app-container">
-              <ProfessionalView />
-            </div>
+            <ProfileGuard allowedRole="pro">
+              <div className="app-container">
+                <ProfessionalView />
+              </div>
+            </ProfileGuard>
           </ProtectedRoute>
         } />
         
         <Route path="/app/cliente" element={
           <ProtectedRoute>
-            <div className="app-container" style={{ backgroundColor: 'white' }}>
-              <ClientView />
-            </div>
+            <ProfileGuard allowedRole="cliente">
+              <div className="app-container" style={{ backgroundColor: 'white' }}>
+                <ClientView />
+              </div>
+            </ProfileGuard>
           </ProtectedRoute>
         } />
 
