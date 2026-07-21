@@ -8,7 +8,7 @@ import {
   fetchClients, insertClient,
   fetchProfile, updateProfile,
   fetchPortfolio, insertPortfolio,
-  fetchProducts, insertProduct,
+  fetchProducts, insertProduct, updateProduct, deleteProduct,
   fetchReviews, insertReview
 } from '../services/database';
 
@@ -132,6 +132,19 @@ export const AppProvider = ({ children }) => {
     else alert(`Erro do Supabase: ${data?.error || 'Erro Desconhecido'}`);
   };
 
+  const editProduct = async (productId, updates) => {
+    const data = await updateProduct(productId, updates);
+    if (data && !data.error) {
+      setProducts(products.map(p => p.id === productId ? data : p));
+    } else alert(`Erro ao atualizar produto: ${data?.error || 'Erro Desconhecido'}`);
+  };
+
+  const removeProduct = async (productId) => {
+    const success = await deleteProduct(productId);
+    if (success) setProducts(products.filter(p => p.id !== productId));
+    else alert('Erro ao deletar produto do Supabase.');
+  };
+
   const addReview = async (review) => {
     const data = await insertReview(review, user.id);
     if (data) setReviews([data, ...reviews]);
@@ -158,7 +171,7 @@ export const AppProvider = ({ children }) => {
       transactions, addTransaction,
       clients, addClient,
       portfolio, addPortfolio,
-      products, addProduct,
+      products, addProduct, editProduct, removeProduct,
       reviews, addReview,
       editProfile
     }}>

@@ -196,6 +196,20 @@ export const insertProduct = async (product, userId) => {
   return data[0];
 };
 
+export const updateProduct = async (productId, updates) => {
+  if (!supabase) return { error: 'Supabase não inicializado' };
+  const { data, error } = await supabase.from('products').update(updates).eq('id', productId).select();
+  if (error) { console.error('Erro:', error); return { error: error.message }; }
+  return data[0];
+};
+
+export const deleteProduct = async (productId) => {
+  if (!supabase) return false;
+  const { error } = await supabase.from('products').delete().eq('id', productId);
+  if (error) { console.error('Erro ao deletar produto:', error); return false; }
+  return true;
+};
+
 // --- AVALIAÇÕES ---
 export const fetchReviews = async (userId) => {
   if (!supabase || !userId) return [];

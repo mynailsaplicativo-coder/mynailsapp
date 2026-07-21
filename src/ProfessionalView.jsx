@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet, Share2, Image, ShoppingBag, ExternalLink } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet, Share2, Image, ShoppingBag, ExternalLink, Trash2, Edit } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import { fetchAllPlans, uploadImage } from './services/database';
@@ -99,6 +99,7 @@ const ProfessionalView = () => {
 
 const PerfilView = () => {
   const { profile, editProfile } = useAppContext();
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: profile?.name || '',
@@ -129,8 +130,12 @@ const PerfilView = () => {
             {formData.photo_url && <img src={formData.photo_url} alt="Perfil" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} />}
             <input type="file" accept="image/*" onChange={async (e) => {
               if (e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
                 setLoading(true);
-                const url = await uploadImage(e.target.files[0]);
+                try {
+                  if (user) await user.setProfileImage({ file });
+                } catch(err) { console.error('Erro ao atualizar foto no Clerk:', err); }
+                const url = await uploadImage(file);
                 if (url) setFormData({...formData, photo_url: url});
                 setLoading(false);
               }
@@ -389,9 +394,10 @@ const AnamneseForm = ({ onBack }) => {
 };
 
 const CatalogoView = () => {
-  const { services, addService, products, addProduct } = useAppContext();
+  const { services, addService, products, addProduct, editProduct, removeProduct } = useAppContext();
   const [isAddingService, setIsAddingService] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [tab, setTab] = useState('servicos'); // 'servicos' ou 'produtos'
 
   const hands = services.filter(s => s.category === 'Mãos');
@@ -413,30 +419,37 @@ const CatalogoView = () => {
           
           {isAddingService && <NewServiceModal onClose={() => setIsAddingService(false)} onSave={addService} />}
 
-          <h3 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>Mãos</h3>
-          <div className="grid-cards" style={{ marginBottom: '2rem' }}>
-            {hands.map((svc) => (
-              <div key={svc.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem' }}>
-                <h3 style={{ fontSize: '1rem' }}>{svc.name}</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  <span>{svc.duration}</span>
-                  <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>R$ {svc.price}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <h3 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>Pés</h3>
           <div className="grid-cards">
-            {feet.map((svc) => (
-              <div key={svc.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem' }}>
-                <h3 style={{ fontSize: '1rem' }}>{svc.name}</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  <span>{svc.duration}</span>
-                  <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>R$ {svc.price}</span>
-                </div>
+            {hands.length > 0 && (
+              <div className="card">
+                <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', color: 'var(--primary-color)' }}>Mãos</h3>
+                {hands.map(s => (
+                  <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--bg-color)' }}>
+                    <div>
+                      <div style={{ fontWeight: 500 }}>{s.name}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{s.duration}</div>
+                    </div>
+                    <div style={{ fontWeight: 600 }}>R$ {s.price}</div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+            
+            {feet.length > 0 && (
+              <div className="card">
+                <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', color: 'var(--primary-color)' }}>Pés</h3>
+                {feet.map(s => (
+                  <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--bg-color)' }}>
+                    <div>
+                      <div style={{ fontWeight: 500 }}>{s.name}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{s.duration}</div>
+                    </div>
+                    <div style={{ fontWeight: 600 }}>R$ {s.price}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {services.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>Nenhum serviço cadastrado.</p>}
           </div>
         </>
       )}
@@ -449,13 +462,20 @@ const CatalogoView = () => {
           </div>
 
           {isAddingProduct && <NewProductModal onClose={() => setIsAddingProduct(false)} onSave={addProduct} />}
+          {editingProduct && <NewProductModal product={editingProduct} onClose={() => setEditingProduct(null)} onSave={(updates) => { editProduct(editingProduct.id, updates); setEditingProduct(null); }} />}
 
           <div className="grid-cards">
             {products.map(prod => (
               <div key={prod.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 {prod.photo_url && <img src={prod.photo_url} alt={prod.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />}
                 <div style={{ padding: '1rem' }}>
-                  <h3 style={{ fontSize: '1.1rem', margin: '0 0 0.5rem' }}>{prod.name}</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h3 style={{ fontSize: '1.1rem', margin: '0 0 0.5rem' }}>{prod.name}</h3>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => setEditingProduct(prod)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Edit size={16} color="var(--text-secondary)" /></button>
+                      <button onClick={() => { if(window.confirm('Excluir produto?')) removeProduct(prod.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16} color="var(--primary-color)" /></button>
+                    </div>
+                  </div>
                   <p style={{ margin: '0 0 0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{prod.description}</p>
                   <div style={{ fontWeight: 600, color: 'var(--primary-color)' }}>R$ {prod.price}</div>
                 </div>
@@ -681,8 +701,8 @@ const PremiumLockView = ({ featureName }) => (
 /* ----- MODALS ----- */
 // Helper to create basic modals
 const ModalWrapper = ({ title, onClose, children }) => (
-  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-    <div className="card animate-in" style={{ width: '400px' }}>
+  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+    <div className="card animate-in" style={{ width: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2>{title}</h2>
         <button onClick={onClose}><X size={20} color="var(--text-secondary)" /></button>
@@ -861,11 +881,11 @@ const NewPortfolioModal = ({ onClose, onSave }) => {
   );
 };
 
-const NewProductModal = ({ onClose, onSave }) => {
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [desc, setDesc] = useState('');
-  const [url, setUrl] = useState('');
+const NewProductModal = ({ onClose, onSave, product }) => {
+  const [name, setName] = useState(product?.name || '');
+  const [price, setPrice] = useState(product?.price || '');
+  const [desc, setDesc] = useState(product?.description || '');
+  const [url, setUrl] = useState(product?.photo_url || '');
   const [uploading, setUploading] = useState(false);
 
   const handleFile = async (e) => {
@@ -879,7 +899,7 @@ const NewProductModal = ({ onClose, onSave }) => {
 
   const handleSubmit = (e) => { e.preventDefault(); onSave({ name, price: parseFloat(price) || price, description: desc, photo_url: url }); onClose(); };
   return (
-    <ModalWrapper title="Novo Produto" onClose={onClose}>
+    <ModalWrapper title={product ? "Editar Produto" : "Novo Produto"} onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <div className="input-group"><label>Nome</label><input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} required /></div>
         <div className="input-group"><label>Preço (R$)</label><input type="number" className="form-input" value={price} onChange={e => setPrice(e.target.value)} required /></div>
