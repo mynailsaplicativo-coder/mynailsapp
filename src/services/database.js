@@ -11,7 +11,7 @@ export const fetchProfile = async (userId) => {
 export const insertProfile = async (profile) => {
   if (!supabase) return null;
   const { data, error } = await supabase.from('profiles').insert([profile]).select();
-  if (error) { console.error('Erro:', error.message); return null; }
+  if (error) { console.error('Erro:', error.message); return { error: error.message }; }
   return data[0];
 };
 

@@ -55,7 +55,7 @@ const Onboarding = () => {
       
       const savedProfile = await insertProfile(newProfile);
       
-      if (savedProfile) {
+      if (savedProfile && !savedProfile.error) {
         setProfile(savedProfile); // Update global state
         if (role === 'pro') {
           navigate('/app/pro');
@@ -63,7 +63,7 @@ const Onboarding = () => {
           navigate('/app/cliente');
         }
       } else {
-        alert("Erro ao criar perfil. Tente novamente.");
+        alert("Erro no banco de dados: " + (savedProfile?.error || "Desconhecido"));
       }
     } catch (err) {
       console.error(err);
