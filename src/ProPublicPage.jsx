@@ -177,7 +177,7 @@ const ProPublicPage = () => {
                     </div>
                   </div>
                 ))}
-              </>
+              </div>
             )}
 
             {activeTab === 'portfolio' && (

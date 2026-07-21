@@ -18,7 +18,7 @@ export const createSubaccount = async (accountData) => {
     
     if (!response.ok) {
       const err = await response.json();
-      throw new Error(err.error || err.description || 'Erro ao criar conta Asaas');
+      throw new Error(err.errors?.[0]?.description || err.error || err.description || 'Erro ao criar conta Asaas');
     }
     
     return await response.json(); // Retorna { walletId, apiKey, ... }
@@ -41,7 +41,7 @@ export const createSplitPayment = async ({ clientName, clientEmail, value, descr
 
     if (!response.ok) {
       const err = await response.json();
-      throw new Error(err.error || err.description || 'Erro ao gerar pagamento');
+      throw new Error(err.errors?.[0]?.description || err.error || err.description || 'Erro ao gerar pagamento');
     }
 
     const data = await response.json();
@@ -70,7 +70,7 @@ export const createPaymentLink = async (planName, value, userName = 'Manicure Pr
 
     if (!response.ok) {
       const err = await response.json();
-      throw new Error(err.error || err.description || 'Erro ao gerar assinatura');
+      throw new Error(err.errors?.[0]?.description || err.error || err.description || 'Erro ao gerar assinatura');
     }
 
     const data = await response.json();
