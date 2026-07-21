@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   const { clientName, clientEmail, value, description } = req.body;
-  const asaasApiKey = process.env.ASAAS_API_KEY;
+  const asaasApiKey = process.env.VITE_ASAAS_API_KEY || process.env.ASAAS_API_KEY || '$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjUwYzgxNTQwLTYzMmQtNDEyYS05OWJjLTA1OTZkOTlhMzhjYTo6JGFhY2hfN2U3NjE3OTMtOWNjOC00NzA2LTgyOWEtZWZmZWI2Njk1NmMw';
 
   if (!asaasApiKey) {
     return res.status(500).json({ error: 'ASAAS_API_KEY is not configured.' });
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     let customerId = '';
     
     // Busca se já existe um customer com esse email no Asaas
-    const searchRes = await fetch(`https://sandbox.asaas.com/api/v3/customers?email=${clientEmail}`, {
+    const searchRes = await fetch(`https://api.asaas.com/v3/customers?email=${clientEmail}`, {
       headers: {
         'access_token': asaasApiKey,
         'Content-Type': 'application/json'
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
       customerId = searchData.data[0].id;
     } else {
       // Cria um novo customer se não existir
-      const createCustomerRes = await fetch('https://sandbox.asaas.com/api/v3/customers', {
+      const createCustomerRes = await fetch('https://api.asaas.com/v3/customers', {
         method: 'POST',
         headers: {
           'access_token': asaasApiKey,
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       description: description
     };
 
-    const response = await fetch('https://sandbox.asaas.com/api/v3/subscriptions', {
+    const response = await fetch('https://api.asaas.com/v3/subscriptions', {
       method: 'POST',
       headers: {
         'access_token': asaasApiKey,
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
     // Mas retorna o ID que pode ser usado. Dependendo da configuração, o Asaas envia o email direto.
     // Vamos tentar buscar a fatura que foi gerada para essa assinatura
     let invoiceUrl = '';
-    const paymentsRes = await fetch(`https://sandbox.asaas.com/api/v3/payments?subscription=${data.id}`, {
+    const paymentsRes = await fetch(`https://api.asaas.com/v3/payments?subscription=${data.id}`, {
       headers: {
         'access_token': asaasApiKey,
         'Content-Type': 'application/json'
@@ -102,7 +102,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ 
       subscriptionId: data.id,
-      invoiceUrl: invoiceUrl || `https://sandbox.asaas.com/c/${customerId}`
+      invoiceUrl: invoiceUrl || `https://api.asaas.com/c/${customerId}`
     });
 
   } catch (error) {
