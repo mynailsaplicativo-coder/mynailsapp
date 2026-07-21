@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet, Share2, Image, ShoppingBag, ExternalLink } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { UserButton, useUser } from '@clerk/clerk-react';
+import { insertService, updateService, deleteService, insertClient, fetchServices, fetchClients, deleteClient, fetchAllPlans, uploadImage } from './services/database';
 import { createPaymentLink, createSubaccount } from './services/asaas';
-import { fetchAllPlans } from './services/database';
 
 const ProfessionalView = () => {
   const [activeTab, setActiveTab] = useState('agenda');
@@ -124,8 +124,18 @@ const PerfilView = () => {
           <input type="text" className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
         </div>
         <div className="input-group">
-          <label>URL da Foto de Perfil (Link)</label>
-          <input type="url" className="form-input" placeholder="https://..." value={formData.photo_url} onChange={e => setFormData({...formData, photo_url: e.target.value})} />
+          <label>Foto de Perfil</label>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {formData.photo_url && <img src={formData.photo_url} alt="Perfil" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} />}
+            <input type="file" accept="image/*" onChange={async (e) => {
+              if (e.target.files && e.target.files[0]) {
+                setLoading(true);
+                const url = await uploadImage(e.target.files[0]);
+                if (url) setFormData({...formData, photo_url: url});
+                setLoading(false);
+              }
+            }} />
+          </div>
         </div>
         <div className="input-group">
           <label>Biografia / Descrição</label>
@@ -823,13 +833,29 @@ const NewClientModal = ({ onClose, onSave }) => {
 const NewPortfolioModal = ({ onClose, onSave }) => {
   const [url, setUrl] = useState('');
   const [desc, setDesc] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setUploading(true);
+      const uploadedUrl = await uploadImage(e.target.files[0]);
+      if (uploadedUrl) setUrl(uploadedUrl);
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = (e) => { e.preventDefault(); onSave({ media_url: url, type: 'photo', description: desc }); onClose(); };
   return (
     <ModalWrapper title="Adicionar Trabalho" onClose={onClose}>
       <form onSubmit={handleSubmit}>
-        <div className="input-group"><label>URL da Imagem</label><input type="url" className="form-input" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." required /></div>
-        <div className="input-group"><label>Legenda / Descrição</label><textarea className="form-input" value={desc} onChange={e => setDesc(e.target.value)}></textarea></div>
-        <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salvar</button>
+        <div className="input-group">
+          <label>Escolher Foto</label>
+          <input type="file" accept="image/*" className="form-input" onChange={handleFile} required={!url} />
+          {uploading && <small style={{ color: 'var(--primary-color)' }}>Enviando imagem...</small>}
+          {url && !uploading && <small style={{ color: 'var(--success)' }}>Imagem carregada com sucesso!</small>}
+        </div>
+        <div className="input-group"><label>Legenda / Descrição</label><textarea className="form-input" value={desc} onChange={e => setDesc(e.target.value)} required></textarea></div>
+        <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={uploading || !url}>Salvar</button>
       </form>
     </ModalWrapper>
   );
@@ -840,6 +866,17 @@ const NewProductModal = ({ onClose, onSave }) => {
   const [price, setPrice] = useState('');
   const [desc, setDesc] = useState('');
   const [url, setUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setUploading(true);
+      const uploadedUrl = await uploadImage(e.target.files[0]);
+      if (uploadedUrl) setUrl(uploadedUrl);
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = (e) => { e.preventDefault(); onSave({ name, price: parseFloat(price) || price, description: desc, photo_url: url }); onClose(); };
   return (
     <ModalWrapper title="Novo Produto" onClose={onClose}>
@@ -847,8 +884,13 @@ const NewProductModal = ({ onClose, onSave }) => {
         <div className="input-group"><label>Nome</label><input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} required /></div>
         <div className="input-group"><label>Preço (R$)</label><input type="number" className="form-input" value={price} onChange={e => setPrice(e.target.value)} required /></div>
         <div className="input-group"><label>Descrição</label><textarea className="form-input" value={desc} onChange={e => setDesc(e.target.value)}></textarea></div>
-        <div className="input-group"><label>URL da Imagem</label><input type="url" className="form-input" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." /></div>
-        <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salvar Produto</button>
+        <div className="input-group">
+          <label>Foto do Produto</label>
+          <input type="file" accept="image/*" className="form-input" onChange={handleFile} />
+          {uploading && <small style={{ color: 'var(--primary-color)' }}>Enviando imagem...</small>}
+          {url && !uploading && <small style={{ color: 'var(--success)' }}>Imagem carregada com sucesso!</small>}
+        </div>
+        <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={uploading}>Salvar Produto</button>
       </form>
     </ModalWrapper>
   );

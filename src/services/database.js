@@ -210,3 +210,31 @@ export const insertReview = async (review, userId) => {
   if (error) { console.error('Erro:', error); return null; }
   return data[0];
 };
+
+// --- STORAGE (Imagens) ---
+export const uploadImage = async (file) => {
+  if (!supabase) return null;
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`; // Na raiz do bucket 'images'
+
+    const { error: uploadError } = await supabase.storage
+      .from('images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Erro no upload da imagem:', uploadError.message);
+      return null;
+    }
+
+    const { data } = supabase.storage
+      .from('images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  } catch (error) {
+    console.error('Falha inesperada no upload:', error);
+    return null;
+  }
+};
