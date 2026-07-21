@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet, Share2, Image, ShoppingBag, ExternalLink } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { UserButton, useUser } from '@clerk/clerk-react';
-import { insertService, updateService, deleteService, insertClient, fetchServices, fetchClients, deleteClient, fetchAllPlans, uploadImage } from './services/database';
+import { fetchAllPlans, uploadImage } from './services/database';
 import { createPaymentLink, createSubaccount } from './services/asaas';
 
 const ProfessionalView = () => {
