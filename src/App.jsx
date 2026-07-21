@@ -8,7 +8,9 @@ import Onboarding from './Onboarding';
 import ProfessionalView from './ProfessionalView';
 import ClientView from './ClientView';
 import ProPublicPage from './ProPublicPage';
+import AdminView from './AdminView';
 import { useAppContext } from './context/AppContext';
+import { useUser } from '@clerk/clerk-react';
 import './App.css';
 
 // Componente para proteger rotas usando Clerk
@@ -34,6 +36,14 @@ const ProfileGuard = ({ children, allowedRole }) => {
     return <Navigate to={profile.role === 'pro' ? '/app/pro' : '/app/cliente'} replace />;
   }
   
+  return children;
+};
+
+const AdminGuard = ({ children }) => {
+  const { user } = useUser();
+  if (!user) return <Navigate to="/login" replace />;
+  const isAdmin = user.primaryEmailAddress?.emailAddress === 'yurilojavirtual@gmail.com';
+  if (!isAdmin) return <Navigate to="/" replace />;
   return children;
 };
 
@@ -75,6 +85,17 @@ function App() {
                 <ClientView />
               </div>
             </ProfileGuard>
+          </ProtectedRoute>
+        } />
+
+        {/* Rota Admin Exclusiva */}
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <AdminGuard>
+              <div className="app-container" style={{ backgroundColor: 'white' }}>
+                <AdminView />
+              </div>
+            </AdminGuard>
           </ProtectedRoute>
         } />
 

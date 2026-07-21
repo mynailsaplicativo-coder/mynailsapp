@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet, Share2, Image, ShoppingBag } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar as CalendarIcon, Users, Settings, Plus, Sparkles, Scissors, ClipboardList, X, DollarSign, Package, Award, ArrowUpCircle, ArrowDownCircle, Wallet, Share2, Image, ShoppingBag, ExternalLink } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import { createPaymentLink, createSubaccount } from './services/asaas';
+import { fetchAllPlans } from './services/database';
 
 const ProfessionalView = () => {
   const [activeTab, setActiveTab] = useState('agenda');
   const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
 
   const { profile } = useAppContext();
+  const { user } = useUser();
+  const isAdmin = user?.primaryEmailAddress?.emailAddress === 'yurilojavirtual@gmail.com';
 
   return (
     <div className="app-container">
@@ -18,7 +21,10 @@ const ProfessionalView = () => {
           <Sparkles color="var(--primary-color)" size={24} />
           <h1 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--primary-color)' }}>My Nails Studio</h1>
         </div>
-        <UserButton />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {isAdmin && <button className="btn btn-outline" onClick={() => window.location.href='/admin'}>Admin</button>}
+            <UserButton />
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -560,10 +566,23 @@ const EstoqueView = () => {
 };
 
 const AssinaturaView = () => {
-  const { isPremium, upgradeToPremium, trialDaysLeft } = useAppContext();
+  const { isPremium, upgradeToPremium, trialDaysLeft, profile } = useAppContext();
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [plans, setPlans] = useState([]);
+  const [loadingPlans, setLoadingPlans] = useState(true);
+
+  useEffect(() => {
+    const loadPlans = async () => {
+      const dbPlans = await fetchAllPlans();
+      if (dbPlans && dbPlans.length > 0) {
+        setPlans(dbPlans.filter(p => p.active));
+      }
+      setLoadingPlans(false);
+    };
+    loadPlans();
+  }, []);
 
   const handleCheckout = async (planName, price) => {
     setLoading(true);
@@ -596,7 +615,6 @@ const AssinaturaView = () => {
 
   return (
     <div className="animate-in">
-      {/* Aviso de Dias de Teste */}
       {!isPremium && (
         <div style={{ backgroundColor: trialDaysLeft > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: trialDaysLeft > 0 ? 'var(--success)' : 'var(--danger)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', marginBottom: '2rem', border: `1px solid ${trialDaysLeft > 0 ? 'var(--success)' : 'var(--danger)'}` }}>
           <h3 style={{ margin: 0, fontSize: '1.25rem' }}>
@@ -614,46 +632,27 @@ const AssinaturaView = () => {
         {errorMsg && <div style={{ color: '#ef4444', marginTop: '1rem', padding: '0.5rem', backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: '8px', display: 'inline-block' }}>{errorMsg}</div>}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
-        
-        {/* Básico */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', border: '1px solid var(--border-color)' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Básico</h3>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '1.5rem' }}>R$ 39,90<span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/mês</span></div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Agenda Ilimitada</li>
-            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Cadastro de Clientes</li>
-            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Catálogo Local</li>
-          </ul>
-          <button className="btn btn-outline" onClick={() => handleCheckout('Básico', 39.90)} disabled={loading}>Assinar Básico</button>
+      {loadingPlans ? (
+        <p style={{ textAlign: 'center' }}>Carregando planos...</p>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+          {plans.map((plan, index) => (
+            <div key={plan.id} className="card" style={{ display: 'flex', flexDirection: 'column', border: index === 1 ? '2px solid var(--primary-color)' : '1px solid var(--border-color)', position: 'relative' }}>
+              {index === 1 && (
+                <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'var(--primary-color)', color: 'white', padding: '2px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>MAIS POPULAR</div>
+              )}
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{plan.name}</h3>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '1.5rem' }}>R$ {plan.price}<span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/{plan.billing_cycle}</span></div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {plan.features.split(',').map((feat, i) => (
+                  <li key={i} style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> {feat.trim()}</li>
+                ))}
+              </ul>
+              <button className={`btn ${index === 1 ? 'btn-primary' : 'btn-outline'}`} onClick={() => handleCheckout(plan.name, plan.price)} disabled={loading}>Assinar {plan.name}</button>
+            </div>
+          ))}
         </div>
-
-        {/* Intermediário */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', border: '2px solid var(--primary-color)', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'var(--primary-color)', color: 'white', padding: '2px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>MAIS POPULAR</div>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Intermediário</h3>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '1.5rem' }}>R$ 59,90<span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/mês</span></div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Tudo do Básico</li>
-            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Controle Financeiro</li>
-            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Gestão de Estoque</li>
-          </ul>
-          <button className="btn btn-primary" onClick={() => handleCheckout('Intermediário', 59.90)} disabled={loading}>Assinar Intermediário</button>
-        </div>
-
-        {/* Avançado */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'var(--secondary-color)', color: 'white' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Avançado</h3>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'white', marginBottom: '1.5rem' }}>R$ 89,90<span style={{ fontSize: '1rem', color: '#ccc', fontWeight: 400 }}>/mês</span></div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', color: '#ccc' }}>
-            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--primary-light)" /> Tudo do Intermediário</li>
-            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--primary-light)" /> Relatórios de IA</li>
-            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--primary-light)" /> Portfólio no app Cliente</li>
-          </ul>
-          <button className="btn" style={{ backgroundColor: 'white', color: 'var(--secondary-color)', fontWeight: 600, border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer' }} onClick={() => handleCheckout('Avançado', 89.90)} disabled={loading}>Assinar Avançado</button>
-        </div>
-
-      </div>
+      )}
     </div>
   );
 };

@@ -63,6 +63,57 @@ export const fetchServices = async (userId) => {
   return data;
 };
 
+export const deleteReview = async (id) => {
+  if (!supabase) return false;
+  const { error } = await supabase.from('reviews').delete().eq('id', id);
+  if (error) { console.error('Erro:', error); return false; }
+  return true;
+};
+
+// --- ADMIN (Planos) ---
+export const fetchAllPlans = async () => {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from('plans').select('*').order('price', { ascending: true });
+  if (error) { console.error('Erro:', error); return []; }
+  return data;
+};
+
+export const insertPlan = async (plan) => {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('plans').insert([plan]).select();
+  if (error) { console.error('Erro:', error); return null; }
+  return data[0];
+};
+
+export const updatePlan = async (id, updates) => {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('plans').update(updates).eq('id', id).select();
+  if (error) { console.error('Erro:', error); return null; }
+  return data[0];
+};
+
+export const deletePlan = async (id) => {
+  if (!supabase) return false;
+  const { error } = await supabase.from('plans').delete().eq('id', id);
+  if (error) { console.error('Erro:', error); return false; }
+  return true;
+};
+
+// --- ADMIN (Usuários) ---
+export const fetchAllProfiles = async () => {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('Erro:', error); return []; }
+  return data;
+};
+
+export const deleteProfile = async (id) => {
+  if (!supabase) return false;
+  const { error } = await supabase.from('profiles').delete().eq('id', id);
+  if (error) { console.error('Erro:', error); return false; }
+  return true;
+};
+
 export const insertService = async (service, userId) => {
   if (!supabase || !userId) return null;
   const { data, error } = await supabase.from('services').insert([{ ...service, user_id: userId }]).select();
