@@ -3,7 +3,6 @@
  */
 
 const ASAAS_BASE_URL = 'https://api.asaas.com/v3';
-// Utilizamos a chave fornecida na variável de ambiente
 const API_KEY = import.meta.env.VITE_ASAAS_API_KEY;
 
 const headers = {
@@ -13,29 +12,53 @@ const headers = {
 
 /**
  * Gera um link genérico de pagamento (Checkout Asaas)
- * Ideal para testes no frontend sem precisar capturar CPF e Endereço.
+ * Atualizado para aceitar Planos Mensais e Valores dinâmicos.
  */
-export const createPaymentLink = async () => {
+export const createPaymentLink = async (planName, value) => {
   try {
     const response = await fetch(`${ASAAS_BASE_URL}/paymentLinks`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
         billingType: 'UNDEFINED',
-        chargeType: 'DETACHED',
-        name: 'Plano Premium - My Nails',
-        description: 'Liberação de todos os recursos premium do aplicativo',
-        value: 49.90,
-        dueDateLimitDays: 3
+        chargeType: 'RECURRING', // Transforma em Assinatura (se a conta Asaas permitir no link genérico)
+        name: `Plano ${planName} - My Nails`,
+        description: `Assinatura mensal do Plano ${planName}`,
+        value: value,
+        dueDateLimitDays: 3,
+        endDate: '2099-12-31', // Mantém a recorrência ativa indefinidamente
+        cycle: 'MONTHLY'
       })
     });
 
+    // Fallback: se o Asaas recusar chargeType RECURRING em paymentLinks para essa conta, 
+    // ele deve ser testado, mas na documentação v3 é permitido.
+    
     if (!response.ok) {
-      throw new Error(`Erro na API do Asaas: ${response.statusText}`);
+      const errData = await response.json().catch(()=>({}));
+      console.warn("Aviso Asaas:", errData);
+      
+      // Tenta fallback sem RECURRING caso a conta não tenha permissão de assinaturas genéricas
+      const fallbackResponse = await fetch(`${ASAAS_BASE_URL}/paymentLinks`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          billingType: 'UNDEFINED',
+          chargeType: 'DETACHED',
+          name: `Plano ${planName} - My Nails (Pagamento Único Fallback)`,
+          description: `Assinatura do Plano ${planName}`,
+          value: value,
+          dueDateLimitDays: 3
+        })
+      });
+      if (!fallbackResponse.ok) throw new Error(`Erro na API do Asaas (Fallback): ${fallbackResponse.statusText}`);
+      
+      const fbData = await fallbackResponse.json();
+      return fbData.url;
     }
 
     const data = await response.json();
-    return data.url; // Retorna a URL de checkout (ex: https://www.asaas.com/c/123456)
+    return data.url; 
   } catch (error) {
     console.error('Falha ao gerar link de pagamento:', error);
     throw error;

@@ -146,12 +146,12 @@ const ClientesView = () => {
 };
 
 const AnamneseForm = ({ onBack }) => {
-  const { isPremium } = useAppContext();
+  const { isPremium, trialDaysLeft } = useAppContext();
   const [recommendation, setRecommendation] = useState(null);
   const handleRecommend = (e) => {
     e.preventDefault();
-    if (!isPremium) {
-      alert("A Anamnese com Inteligência Artificial é exclusiva do Plano Premium!");
+    if (!isPremium && trialDaysLeft === 0) {
+      alert("Seu período de teste acabou! Assine o plano Avançado para usar a Ficha Inteligente com IA.");
       return;
     }
     setRecommendation({ service: "Blindagem / Banho de Gel", reason: "Baseado no histórico de unhas fracas e desejo de manter o comprimento natural." });
@@ -233,10 +233,10 @@ const ServicosView = () => {
 };
 
 const FinanceiroView = () => {
-  const { transactions, addTransaction, isPremium } = useAppContext();
+  const { transactions, addTransaction, isPremium, trialDaysLeft } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
 
-  if (!isPremium) return <PremiumLockView featureName="Controle Financeiro Completo" />;
+  if (!isPremium && trialDaysLeft === 0) return <PremiumLockView featureName="Controle Financeiro Completo" />;
 
   const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
   const totalExpense = transactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
@@ -296,10 +296,10 @@ const FinanceiroView = () => {
 };
 
 const EstoqueView = () => {
-  const { inventory, addMaterial, isPremium } = useAppContext();
+  const { inventory, addMaterial, isPremium, trialDaysLeft } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
 
-  if (!isPremium) return <PremiumLockView featureName="Controle Inteligente de Estoque" />;
+  if (!isPremium && trialDaysLeft === 0) return <PremiumLockView featureName="Controle Inteligente de Estoque" />;
 
   return (
     <div className="animate-in">
@@ -339,19 +339,18 @@ const EstoqueView = () => {
 };
 
 const AssinaturaView = () => {
-  const { isPremium, upgradeToPremium } = useAppContext();
+  const { isPremium, upgradeToPremium, trialDaysLeft } = useAppContext();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (planName, price) => {
     setLoading(true);
     setErrorMsg('');
     try {
-      const checkoutUrl = await createPaymentLink();
+      const checkoutUrl = await createPaymentLink(planName, price);
       window.open(checkoutUrl, '_blank');
       
-      // Simulação do Webhook: Libera o acesso para testes
-      alert("A tela de pagamento segura do Asaas foi aberta!\n\nNa vida real, a conta só vira Premium após o webhook do Asaas confirmar o Pix. Para testes, liberamos agora.");
+      alert(`A tela de pagamento do Asaas para o Plano ${planName} foi aberta!\n\nNa vida real, a conta só é liberada após o webhook do Asaas confirmar o Pix. Para testes, vamos liberar agora.`);
       upgradeToPremium();
     } catch (err) {
       setErrorMsg('Erro de CORS ou Chave Inválida. Verifique o console.');
@@ -364,24 +363,73 @@ const AssinaturaView = () => {
   if (isPremium) return (
     <div className="animate-in card" style={{ padding: '3rem', textAlign: 'center', background: 'linear-gradient(135deg, var(--success), #059669)', color: 'white' }}>
       <Award size={48} color="white" style={{ margin: '0 auto 1rem' }} />
-      <h2 style={{ marginBottom: '1rem', color: 'white' }}>Você é Premium! 🌟</h2>
+      <h2 style={{ marginBottom: '1rem', color: 'white' }}>Assinatura Ativa! 🌟</h2>
       <p style={{ color: 'rgba(255,255,255,0.9)', maxWidth: '500px', margin: '0 auto' }}>
-        Seu portfólio está no topo das buscas, a confirmação automática está ativa e todos os relatórios estão desbloqueados.
+        Seu negócio está operando com poder máximo. Todos os relatórios e ferramentas estão desbloqueados.
       </p>
     </div>
   );
 
   return (
-    <div className="animate-in card" style={{ padding: '3rem', textAlign: 'center', background: 'linear-gradient(135deg, var(--secondary-color), #333)', color: 'white' }}>
-      <Award size={48} color="var(--primary-color)" style={{ margin: '0 auto 1rem' }} />
-      <h2 style={{ marginBottom: '1rem', color: 'white' }}>Plano Profissional</h2>
-      <p style={{ color: '#ccc', maxWidth: '500px', margin: '0 auto 2rem' }}>
-        Seu portfólio no topo das buscas do app cliente, confirmação automática de agenda via WhatsApp e relatórios avançados de financeiro e estoque.
-      </p>
-      {errorMsg && <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.5rem', backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: '8px' }}>{errorMsg}</div>}
-      <button className="btn btn-primary" onClick={handleCheckout} disabled={loading}>
-        {loading ? 'Gerando Tela de Pagamento...' : 'Ativar Premium (R$ 49,90/mês)'}
-      </button>
+    <div className="animate-in">
+      {/* Aviso de Dias de Teste */}
+      {!isPremium && (
+        <div style={{ backgroundColor: trialDaysLeft > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: trialDaysLeft > 0 ? 'var(--success)' : 'var(--danger)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', marginBottom: '2rem', border: `1px solid ${trialDaysLeft > 0 ? 'var(--success)' : 'var(--danger)'}` }}>
+          <h3 style={{ margin: 0, fontSize: '1.25rem' }}>
+            {trialDaysLeft > 0 ? `Seu Período de Teste Grátis termina em ${trialDaysLeft} dias!` : 'Seu Período de Teste Acabou!'}
+          </h3>
+          <p style={{ margin: '0.5rem 0 0', opacity: 0.9 }}>
+            {trialDaysLeft > 0 ? 'Aproveite para testar todas as funcionalidades. Assine um plano para não perder o acesso.' : 'Escolha um plano abaixo para continuar usando o aplicativo e impulsionar suas vendas.'}
+          </p>
+        </div>
+      )}
+
+      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <h2>Escolha o Plano Ideal</h2>
+        <p style={{ color: 'var(--text-secondary)' }}>Foque em fazer unhas incríveis. Nós cuidamos do resto.</p>
+        {errorMsg && <div style={{ color: '#ef4444', marginTop: '1rem', padding: '0.5rem', backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: '8px', display: 'inline-block' }}>{errorMsg}</div>}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+        
+        {/* Básico */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', border: '1px solid var(--border-color)' }}>
+          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Básico</h3>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '1.5rem' }}>R$ 39,90<span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/mês</span></div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Agenda Ilimitada</li>
+            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Cadastro de Clientes</li>
+            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Catálogo Local</li>
+          </ul>
+          <button className="btn btn-outline" onClick={() => handleCheckout('Básico', 39.90)} disabled={loading}>Assinar Básico</button>
+        </div>
+
+        {/* Intermediário */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', border: '2px solid var(--primary-color)', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'var(--primary-color)', color: 'white', padding: '2px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>MAIS POPULAR</div>
+          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Intermediário</h3>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '1.5rem' }}>R$ 59,90<span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/mês</span></div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Tudo do Básico</li>
+            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Controle Financeiro</li>
+            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> Gestão de Estoque</li>
+          </ul>
+          <button className="btn btn-primary" onClick={() => handleCheckout('Intermediário', 59.90)} disabled={loading}>Assinar Intermediário</button>
+        </div>
+
+        {/* Avançado */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'var(--secondary-color)', color: 'white' }}>
+          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Avançado</h3>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'white', marginBottom: '1.5rem' }}>R$ 89,90<span style={{ fontSize: '1rem', color: '#ccc', fontWeight: 400 }}>/mês</span></div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', color: '#ccc' }}>
+            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--primary-light)" /> Tudo do Intermediário</li>
+            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--primary-light)" /> Relatórios de IA</li>
+            <li style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--primary-light)" /> Portfólio no app Cliente</li>
+          </ul>
+          <button className="btn" style={{ backgroundColor: 'white', color: 'var(--secondary-color)', fontWeight: 600, border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer' }} onClick={() => handleCheckout('Avançado', 89.90)} disabled={loading}>Assinar Avançado</button>
+        </div>
+
+      </div>
     </div>
   );
 };

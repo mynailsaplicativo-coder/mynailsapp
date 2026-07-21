@@ -16,10 +16,21 @@ export const AppProvider = ({ children }) => {
   const [services, setServices] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [clients, setClients] = useState([]);
-  
   const [isPremium, setIsPremium] = useState(false); // Fake profile premium status
+  const [trialDaysLeft, setTrialDaysLeft] = useState(15);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Calcula os dias de teste baseados na data de criação da conta no Clerk
+    if (user && user.createdAt) {
+      const createdDate = new Date(user.createdAt);
+      const now = new Date();
+      const diffTime = Math.abs(now - createdDate);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const daysLeft = Math.max(0, 15 - diffDays);
+      setTrialDaysLeft(daysLeft);
+    }
+  }, [user]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -85,7 +96,7 @@ export const AppProvider = ({ children }) => {
 
   return (
     <AppContext.Provider value={{ 
-      user, isPremium, upgradeToPremium, loading,
+      user, isPremium, upgradeToPremium, loading, trialDaysLeft,
       appointments, addAppointment, 
       services, addService,
       inventory, addMaterial,

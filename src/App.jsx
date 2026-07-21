@@ -30,8 +30,8 @@ function App() {
         <Route path="/" element={<Landing />} />
         
         {/* Usamos as páginas padrão do Clerk encapsuladas no nosso Auth.jsx */}
-        <Route path="/login" element={<Auth isLogin={true} />} />
-        <Route path="/cadastro" element={<Auth isLogin={false} />} />
+        <Route path="/login/*" element={<Auth isLogin={true} />} />
+        <Route path="/cadastro/*" element={<Auth isLogin={false} />} />
         
         {/* Rotas Privadas (App) protegidas pelo Clerk */}
         <Route path="/app/pro" element={

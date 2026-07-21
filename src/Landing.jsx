@@ -108,48 +108,62 @@ const Landing = () => {
       <section style={{ padding: '5rem 5%', background: 'linear-gradient(135deg, #fdfbfb, #ebedee)' }}>
         <h3 style={{ textAlign: 'center', fontSize: '2.5rem', marginBottom: '1rem' }}>Invista no Seu Negócio</h3>
         <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '4rem', maxWidth: '600px', margin: '0 auto' }}>
-          Escolha o plano perfeito para o momento do seu estúdio. Comece de graça e faça o upgrade quando crescer.
+          Teste grátis por 15 dias! Escolha o plano perfeito para o momento do seu estúdio.
         </p>
         
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center', maxWidth: '1000px', margin: '0 auto' }}>
-          {/* Free Plan */}
-          <div className="card" style={{ flex: '1 1 300px', padding: '3rem 2rem', textAlign: 'center', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
-            <h4 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Plano Essencial</h4>
-            <div style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '2rem' }}>
-              Grátis
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+          
+          {/* Básico */}
+          <div className="card" style={{ padding: '3rem 2rem', textAlign: 'center', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
+            <h4 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Básico</h4>
+            <div style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '1.5rem', verticalAlign: 'top' }}>R$</span>39<span style={{ fontSize: '1.5rem' }}>,90</span>
             </div>
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '2rem', display: 'block' }}>por mês</span>
+            
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-              <li>✅ Agenda inteligente (limite de 50/mês)</li>
-              <li>✅ Cadastro básico de clientes</li>
-              <li>✅ Catálogo de serviços simples</li>
-              <li style={{ color: 'var(--text-light)' }}>❌ Controle Financeiro Completo</li>
-              <li style={{ color: 'var(--text-light)' }}>❌ Gestão de Estoque</li>
-              <li style={{ color: 'var(--text-light)' }}>❌ Anamnese com IA</li>
+              <li>✅ Agenda Ilimitada</li>
+              <li>✅ Cadastro de Clientes</li>
+              <li>✅ Catálogo Local</li>
             </ul>
-            <button className="btn btn-outline" onClick={() => navigate('/cadastro?type=pro')} style={{ width: '100%' }}>Começar Grátis</button>
+            <button className="btn btn-outline" onClick={() => navigate('/cadastro')} style={{ width: '100%' }}>Testar 15 Dias Grátis</button>
           </div>
 
-          {/* Premium Plan */}
-          <div className="glass-panel" style={{ flex: '1 1 300px', padding: '3rem 2rem', textAlign: 'center', background: 'linear-gradient(135deg, var(--secondary-color), #333)', color: 'white', position: 'relative', transform: 'scale(1.05)', display: 'flex', flexDirection: 'column' }}>
+          {/* Intermediário */}
+          <div className="glass-panel" style={{ padding: '3rem 2rem', textAlign: 'center', background: 'linear-gradient(135deg, var(--secondary-color), #333)', color: 'white', position: 'relative', transform: 'scale(1.05)', display: 'flex', flexDirection: 'column' }}>
             <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--primary-color)', color: 'white', padding: '0.5rem 1rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700, boxShadow: 'var(--shadow-glow)' }}>
               MAIS POPULAR
             </div>
-            <h4 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Plano Profissional</h4>
+            <h4 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Intermediário</h4>
             <div style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '1.5rem', verticalAlign: 'top' }}>R$</span>49<span style={{ fontSize: '1.5rem' }}>,90</span>
+              <span style={{ fontSize: '1.5rem', verticalAlign: 'top' }}>R$</span>59<span style={{ fontSize: '1.5rem' }}>,90</span>
             </div>
             <span style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '2rem', display: 'block' }}>por mês</span>
             
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-              <li>✨ Agenda ilimitada</li>
-              <li>✨ Controle Financeiro e DRE</li>
-              <li>✨ Controle de Estoque (com alertas)</li>
-              <li>✨ App Exclusivo para suas clientes</li>
-              <li>✨ Anamnese com Inteligência Artificial</li>
-              <li>✨ Destaque na Busca do App</li>
+              <li>✨ Tudo do Básico</li>
+              <li>✨ Controle Financeiro</li>
+              <li>✨ Gestão de Estoque</li>
             </ul>
-            <button className="btn btn-primary" onClick={() => navigate('/cadastro?type=pro')} style={{ width: '100%' }}>Assinar Agora</button>
+            <button className="btn btn-primary" onClick={() => navigate('/cadastro')} style={{ width: '100%' }}>Testar 15 Dias Grátis</button>
           </div>
+
+          {/* Avançado */}
+          <div className="card" style={{ padding: '3rem 2rem', textAlign: 'center', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--primary-light)' }}>
+            <h4 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--primary-color)' }}>Avançado</h4>
+            <div style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--primary-color)', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '1.5rem', verticalAlign: 'top' }}>R$</span>89<span style={{ fontSize: '1.5rem' }}>,90</span>
+            </div>
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '2rem', display: 'block' }}>por mês</span>
+            
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+              <li>💎 Tudo do Intermediário</li>
+              <li>💎 Relatórios de IA</li>
+              <li>💎 Portfólio no app Cliente</li>
+            </ul>
+            <button className="btn btn-outline" onClick={() => navigate('/cadastro')} style={{ width: '100%', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>Testar 15 Dias Grátis</button>
+          </div>
+
         </div>
       </section>
 
