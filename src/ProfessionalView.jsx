@@ -297,7 +297,7 @@ const AgendaView = () => {
 };
 
 const ClientesView = () => {
-  const { clients, addClient } = useAppContext();
+  const { clients, addClient, editClient } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
   const [view, setView] = useState('list'); // list or anamnese
 
