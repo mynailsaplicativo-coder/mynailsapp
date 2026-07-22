@@ -133,10 +133,13 @@ const PerfilView = () => {
                 const file = e.target.files[0];
                 setLoading(true);
                 try {
-                  if (user) await user.setProfileImage({ file });
+                  await user.setProfileImage({ file });
                 } catch(err) { console.error('Erro ao atualizar foto no Clerk:', err); }
                 const url = await uploadImage(file);
-                if (url) setFormData({...formData, photo_url: url});
+                if (url) {
+                  setFormData({...formData, photo_url: url});
+                  await editProfile({ ...formData, photo_url: url }); // Auto-save!
+                }
                 setLoading(false);
               }
             }} />
