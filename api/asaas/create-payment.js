@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   }
 
   const { clientName, clientEmail, value, description, splitWalletId } = req.body;
-  const API_KEY = process.env.VITE_ASAAS_API_KEY || '$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjUwYzgxNTQwLTYzMmQtNDEyYS05OWJjLTA1OTZkOTlhMzhjYTo6JGFhY2hfN2U3NjE3OTMtOWNjOC00NzA2LTgyOWEtZWZmZWI2Njk1NmMw';
+  const API_KEY = process.env.VITE_ASAAS_API_KEY || 'dummy_key_redeploy';
 
   try {
     // 1. Procurar ou Criar Customer (Cliente Genérico para o Agendamento)
