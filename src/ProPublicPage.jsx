@@ -108,7 +108,7 @@ const ProPublicPage = () => {
   if (error) return <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{error}</div>;
 
   return (
-    <div className="app-container" style={{ minHeight: '100vh', backgroundColor: 'var(--bg-color)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-color)', overflowY: 'auto' }}>
       {/* Header */}
       <div style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', backgroundColor: 'var(--surface-color)' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
