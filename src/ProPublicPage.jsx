@@ -28,6 +28,14 @@ const ProPublicPage = () => {
   const [clientName, setClientName] = useState(user?.fullName || '');
   const [clientPhone, setClientPhone] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  const [anamnese, setAnamnese] = useState({
+    diabetica: false,
+    alergia: false,
+    alergiaQual: '',
+    roiUnhas: false,
+    obsMedicas: ''
+  });
 
   useEffect(() => {
     const loadProData = async () => {
@@ -38,20 +46,22 @@ const ProPublicPage = () => {
           setError('Profissional não encontrado.');
           return;
         }
+
         setPro(proProfile);
         
-        const proServices = await fetchServices(id);
-        setServices(proServices || []);
-        
-        const [port, prod, revs] = await Promise.all([
+        const [svcs, port, prods, revs] = await Promise.all([
+          fetchServices(id),
           fetchPortfolio(id),
           fetchProducts(id),
           fetchReviews(id)
         ]);
+
+        setServices(svcs || []);
         setPortfolio(port || []);
-        setProducts(prod || []);
+        setProducts(prods || []);
         setReviews(revs || []);
       } catch (err) {
+        console.error(err);
         setError('Erro ao carregar os dados.');
       } finally {
         setLoading(false);
@@ -66,12 +76,20 @@ const ProPublicPage = () => {
     
     setIsProcessing(true);
     try {
+      const anamneseNotes = `Ficha de Anamnese:
+- Diabética: ${anamnese.diabetica ? 'Sim' : 'Não'}
+- Alergias: ${anamnese.alergia ? `Sim (${anamnese.alergiaQual})` : 'Não'}
+- Roí unhas: ${anamnese.roiUnhas ? 'Sim' : 'Não'}
+- Observações Médicas: ${anamnese.obsMedicas || 'Nenhuma'}
+
+Origem: Agendou pelo Link Público.`;
+
       // 1. Salva no CRM da Manicure
       await insertClient({
         name: clientName,
         phone: clientPhone,
         frequency: 'Novo Cliente',
-        notes: 'Agendou pelo Link Público'
+        notes: anamneseNotes
       }, id); // user_id = id da manicure
 
       // 2. Simula Pagamento Split
@@ -258,6 +276,51 @@ const ProPublicPage = () => {
               <div className="input-group">
                 <label>Seu Telefone (WhatsApp)</label>
                 <input type="tel" className="form-input" required value={clientPhone} onChange={e => setClientPhone(e.target.value)} placeholder="(11) 99999-9999" />
+              </div>
+
+              <div style={{ padding: '1.5rem', backgroundColor: 'rgba(var(--primary-rgb), 0.05)', borderRadius: '12px', border: '1px solid var(--border-color)', marginTop: '1rem' }}>
+                <h4 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>Ficha de Anamnese</h4>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Para garantirmos o melhor atendimento e a sua segurança, por favor preencha rapidamente:</p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={anamnese.diabetica} onChange={e => setAnamnese({...anamnese, diabetica: e.target.checked})} style={{ width: '18px', height: '18px' }} />
+                    Sou diabética(o)
+                  </label>
+                  
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={anamnese.roiUnhas} onChange={e => setAnamnese({...anamnese, roiUnhas: e.target.checked})} style={{ width: '18px', height: '18px' }} />
+                    Tenho o costume de roer as unhas
+                  </label>
+                  
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={anamnese.alergia} onChange={e => setAnamnese({...anamnese, alergia: e.target.checked})} style={{ width: '18px', height: '18px' }} />
+                    Tenho alergia a algum produto / esmalte
+                  </label>
+                  
+                  {anamnese.alergia && (
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="Qual produto?" 
+                      value={anamnese.alergiaQual} 
+                      onChange={e => setAnamnese({...anamnese, alergiaQual: e.target.value})} 
+                      required 
+                      style={{ marginLeft: '1.5rem', width: 'calc(100% - 1.5rem)' }}
+                    />
+                  )}
+
+                  <div className="input-group" style={{ marginTop: '0.5rem' }}>
+                    <label style={{ fontSize: '0.9rem' }}>Outras observações médicas (opcional)</label>
+                    <textarea 
+                      className="form-input" 
+                      rows="2" 
+                      placeholder="Ex: micose recente, cirurgia, gravidez..." 
+                      value={anamnese.obsMedicas} 
+                      onChange={e => setAnamnese({...anamnese, obsMedicas: e.target.value})}
+                    ></textarea>
+                  </div>
+                </div>
               </div>
 
               <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem', padding: '1rem', fontSize: '1.1rem' }} disabled={isProcessing}>
