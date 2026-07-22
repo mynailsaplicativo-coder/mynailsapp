@@ -506,6 +506,11 @@ const CatalogoView = () => {
             {products.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>Nenhum produto cadastrado para venda.</p>}
           </div>
         </>
+      )}
+    </div>
+  );
+};
+
 const FinancasView = () => {
   const { transactions, addTransaction, plan, trialDaysLeft } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
