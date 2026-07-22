@@ -25,7 +25,7 @@ export const AppProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
   
-  const [isPremium, setIsPremium] = useState(false); // Fake profile premium status
+  const [plan, setPlan] = useState('basic'); // 'basic', 'intermediate', 'advanced'
   const [trialDaysLeft, setTrialDaysLeft] = useState(15);
   const [walletId, setWalletId] = useState(null); // Asaas Wallet ID para Split
   const [loading, setLoading] = useState(true);
@@ -37,9 +37,8 @@ export const AppProvider = ({ children }) => {
       const createdDate = new Date(user.createdAt);
       const now = new Date();
       const diffTime = Math.abs(now - createdDate);
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      const daysLeft = Math.max(0, 15 - diffDays);
-      setTrialDaysLeft(daysLeft);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      setTrialDaysLeft(Math.max(0, 15 - diffDays));
     }
   }, [user]);
 
@@ -54,6 +53,7 @@ export const AppProvider = ({ children }) => {
         if (userProfile) {
           setProfile(userProfile);
           if (userProfile.wallet_id) setWalletId(userProfile.wallet_id);
+          if (userProfile.plan_type) setPlan(userProfile.plan_type);
         }
 
         // Tenta buscar dados reais do Supabase (para Profissionais)
@@ -68,44 +68,41 @@ export const AppProvider = ({ children }) => {
           fetchReviews(user.id)
         ]);
 
-        setAppointments(appts || []);
-        setServices(svcs || []);
-        setInventory(inv || []);
-        setTransactions(tx || []);
-        setClients(cls || []);
-        setPortfolio(port || []);
-        setProducts(prod || []);
-        setReviews(revs || []);
-      } catch (err) {
-        console.error("Erro ao carregar dados da nuvem:", err);
+        if (appts) setAppointments(appts);
+        if (svcs) setServices(svcs);
+        if (inv) setInventory(inv);
+        if (tx) setTransactions(tx);
+        if (cls) setClients(cls);
+        if (port) setPortfolio(port);
+        if (prod) setProducts(prod);
+        if (revs) setReviews(revs);
+      } catch (error) {
+        console.error('Erro ao carregar dados iniciais:', error);
       } finally {
         setLoading(false);
       }
     };
+    
+    if (isLoaded) loadData();
+  }, [user, isLoaded]);
 
-    // Só tenta carregar do banco quando o Clerk já resolveu se o user tá logado ou não
-    if (isLoaded && user) {
-      loadData();
-    }
-  }, [isLoaded, user]);
-
-  // Actions (Agora salvam na nuvem e depois atualizam o estado local)
-  const addAppointment = async (appointment) => {
-    const data = await insertAppointment(appointment, user.id);
+  // Funções de CRUD delegadas para o Supabase
+  const addAppointment = async (apt) => {
+    const data = await insertAppointment(apt, user.id);
     if (data && !data.error) setAppointments([...appointments, data]);
-    else alert(`Erro ao salvar agendamento: ${data?.error || 'Desconhecido'}`);
+    else alert(`Erro ao agendar: ${data?.error || 'Desconhecido'}`);
   };
 
   const addService = async (service) => {
     const data = await insertService(service, user.id);
-    if (data && !data.error) setServices([...services, data]);
-    else alert(`Erro do Supabase: ${data?.error || 'Erro Desconhecido'}\n\nVocê rodou o script CREATE TABLE services no Supabase?`);
+    if (data) setServices([...services, data]);
+    else alert('Erro ao salvar serviço.');
   };
 
-  const addMaterial = async (material) => {
-    const data = await insertMaterial(material, user.id);
-    if (data && !data.error) setInventory([...inventory, data]);
-    else alert(`Erro ao salvar material: ${data?.error || 'Desconhecido'}`);
+  const addMaterial = async (item) => {
+    const data = await insertMaterial(item, user.id);
+    if (data) setInventory([...inventory, data]);
+    else alert('Erro ao salvar material.');
   };
 
   const addTransaction = async (transaction) => {
@@ -129,26 +126,22 @@ export const AppProvider = ({ children }) => {
   const addProduct = async (product) => {
     const data = await insertProduct(product, user.id);
     if (data && !data.error) setProducts([...products, data]);
-    else alert(`Erro do Supabase: ${data?.error || 'Erro Desconhecido'}`);
+    else alert(`Erro ao salvar produto: ${data?.error || 'Desconhecido'}`);
   };
 
-  const editProduct = async (productId, updates) => {
-    const data = await updateProduct(productId, updates);
-    if (data && !data.error) {
-      setProducts(products.map(p => p.id === productId ? data : p));
-    } else alert(`Erro ao atualizar produto: ${data?.error || 'Erro Desconhecido'}`);
+  const editProduct = async (id, updates) => {
+    const data = await updateProduct(id, updates);
+    if (data) setProducts(products.map(p => p.id === id ? data : p));
   };
 
-  const removeProduct = async (productId) => {
-    const success = await deleteProduct(productId);
-    if (success) setProducts(products.filter(p => p.id !== productId));
-    else alert('Erro ao deletar produto do Supabase.');
+  const removeProduct = async (id) => {
+    const success = await deleteProduct(id);
+    if (success) setProducts(products.filter(p => p.id !== id));
   };
 
   const addReview = async (review) => {
     const data = await insertReview(review, user.id);
     if (data) setReviews([data, ...reviews]);
-    else alert('Erro ao salvar avaliação.');
   };
 
   const editProfile = async (updates) => {
@@ -156,14 +149,14 @@ export const AppProvider = ({ children }) => {
     if (data) setProfile(data);
   };
 
-  const upgradeToPremium = () => {
-    setIsPremium(true);
-    // Aqui atualizaríamos o banco de dados Supabase: updateProfile(user.id, { is_premium: true })
+  const changePlan = async (newPlan) => {
+    setPlan(newPlan);
+    await updateProfile(user.id, { plan_type: newPlan });
   };
 
   return (
     <AppContext.Provider value={{ 
-      user, profile, setProfile, isPremium, upgradeToPremium, loading, trialDaysLeft,
+      user, profile, setProfile, plan, changePlan, loading, trialDaysLeft,
       walletId, setWalletId,
       appointments, addAppointment, 
       services, addService,

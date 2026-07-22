@@ -190,25 +190,8 @@ const PortfolioView = () => {
 };
 
 const RecebimentosView = () => {
-  const { walletId, setWalletId } = useAppContext();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: '', cpfCnpj: '', email: '', phone: '', postalCode: '', address: '', addressNumber: '', province: '' });
-  const [msg, setMsg] = useState(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMsg(null);
-    try {
-      const data = await createSubaccount(formData);
-      setWalletId(data.walletId);
-      setMsg({ type: 'success', text: 'Conta Asaas criada com sucesso! Você já pode receber pagamentos.' });
-    } catch (err) {
-      setMsg({ type: 'error', text: err.message });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { walletId, setWalletId, editProfile } = useAppContext();
+  const [localWallet, setLocalWallet] = useState('');
 
   if (walletId) {
     return (
@@ -217,7 +200,7 @@ const RecebimentosView = () => {
         <h2>Sua Conta de Recebimentos está Ativa!</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>ID da Carteira: <strong>{walletId}</strong></p>
         <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '8px', color: 'var(--success)' }}>
-          ✅ Quando suas clientes pagarem pelo link do app, o dinheiro (descontado a taxa) cairá automaticamente na sua conta Asaas.
+          ✅ Tudo certo! Quando suas clientes pagarem pelo link do app, o dinheiro cairá automaticamente na sua conta Asaas.
         </div>
       </div>
     );
@@ -227,42 +210,36 @@ const RecebimentosView = () => {
     <div className="animate-in">
       <div style={{ marginBottom: '2rem' }}>
         <h2>Conta de Recebimentos (Asaas)</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>Crie sua conta digital gratuita no Asaas para receber pagamentos das clientes automaticamente com Split.</p>
+        <p style={{ color: 'var(--text-secondary)' }}>Para receber pagamentos das suas clientes no aplicativo, você precisa criar uma conta gratuita no banco digital Asaas.</p>
       </div>
       
-      {msg && (
-        <div style={{ padding: '1rem', marginBottom: '1.5rem', borderRadius: '8px', backgroundColor: msg.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: msg.type === 'error' ? 'var(--danger)' : 'var(--success)' }}>
-          {msg.text}
-        </div>
-      )}
-
       <div style={{ display: 'grid', gap: '2rem' }}>
-        <form className="card" onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-          <h3 style={{ gridColumn: '1 / -1', marginBottom: '-0.5rem' }}>Criar Nova Conta</h3>
-          <div className="input-group" style={{ gridColumn: '1 / -1' }}><label>Nome Completo (ou Razão Social)</label><input type="text" className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} /></div>
-          <div className="input-group"><label>CPF ou CNPJ (só números)</label><input type="text" className="form-input" required value={formData.cpfCnpj} onChange={e => setFormData({...formData, cpfCnpj: e.target.value})} /></div>
-          <div className="input-group"><label>Email</label><input type="email" className="form-input" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
-          <div className="input-group"><label>Celular (só números com DDD)</label><input type="text" className="form-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
-          <div className="input-group"><label>CEP</label><input type="text" className="form-input" required value={formData.postalCode} onChange={e => setFormData({...formData, postalCode: e.target.value})} /></div>
-          <div className="input-group" style={{ gridColumn: '1 / -1' }}><label>Endereço</label><input type="text" className="form-input" required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} /></div>
-          <div className="input-group"><label>Número</label><input type="text" className="form-input" required value={formData.addressNumber} onChange={e => setFormData({...formData, addressNumber: e.target.value})} /></div>
-          <div className="input-group"><label>Bairro</label><input type="text" className="form-input" required value={formData.province} onChange={e => setFormData({...formData, province: e.target.value})} /></div>
-          <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-              {loading ? 'Criando Conta Segura...' : 'Criar Conta de Recebimentos'}
-            </button>
-          </div>
-        </form>
+        <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem', border: '2px solid var(--primary-color)' }}>
+          <h3 style={{ marginBottom: '1rem' }}>1. Crie sua conta grátis</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+            Clique no botão abaixo para abrir o Asaas, crie sua conta e depois retorne aqui.
+          </p>
+          <a href="https://www.asaas.com/r/d3d4045d-e702-46ff-9c14-182b119e0af2" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem', display: 'inline-block' }}>
+            Criar Conta no Asaas
+          </a>
+        </div>
 
-        <form className="card" onSubmit={(e) => { e.preventDefault(); setWalletId(e.target.elements.walletId.value); }}>
-          <h3 style={{ marginBottom: '1rem' }}>Já possui conta no Asaas?</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Se você já tem uma conta no Asaas, insira o ID da sua Carteira (Wallet ID) abaixo para vincular sua conta existente.</p>
+        <form className="card" onSubmit={async (e) => { 
+          e.preventDefault(); 
+          if(localWallet.trim()){
+             setWalletId(localWallet.trim()); 
+             await editProfile({ wallet_id: localWallet.trim() });
+          }
+        }}>
+          <h3 style={{ marginBottom: '1rem' }}>2. Cole seu Wallet ID</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            Após criar a conta, vá no seu Asaas em <strong>Meu Perfil &gt; Integrações &gt; Split de Pagamentos</strong> e copie o <strong>ID da Carteira (Wallet ID)</strong>.
+          </p>
           <div className="input-group">
-            <label>ID da Carteira (Wallet ID)</label>
-            <input type="text" name="walletId" className="form-input" placeholder="Ex: wal_123456789" required />
+            <input type="text" className="form-input" placeholder="Ex: wal_123456789" required value={localWallet} onChange={e => setLocalWallet(e.target.value)} />
           </div>
-          <button type="submit" className="btn btn-outline" style={{ marginTop: '1rem' }}>
-            Vincular Conta Existente
+          <button type="submit" className="btn btn-outline" style={{ marginTop: '1rem', width: '100%' }}>
+            Vincular Conta e Ativar Pagamentos
           </button>
         </form>
       </div>
@@ -502,16 +479,11 @@ const CatalogoView = () => {
             {products.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>Nenhum produto cadastrado para venda.</p>}
           </div>
         </>
-      )}
-    </div>
-  );
-};
-
-const FinanceiroView = () => {
-  const { transactions, addTransaction, isPremium, trialDaysLeft } = useAppContext();
+const FinancasView = () => {
+  const { transactions, addTransaction, plan, trialDaysLeft } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
 
-  if (!isPremium && trialDaysLeft === 0) return <PremiumLockView featureName="Controle Financeiro Completo" />;
+  if (plan === 'basic' && trialDaysLeft === 0) return <PremiumLockView featureName="Controle Financeiro Completo" requiredPlan="Intermediário" />;
 
   const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
   const totalExpense = transactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
@@ -571,10 +543,10 @@ const FinanceiroView = () => {
 };
 
 const EstoqueView = () => {
-  const { inventory, addMaterial, isPremium, trialDaysLeft } = useAppContext();
+  const { inventory, addMaterial, plan, trialDaysLeft } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
 
-  if (!isPremium && trialDaysLeft === 0) return <PremiumLockView featureName="Controle Inteligente de Estoque" />;
+  if (plan === 'basic' && trialDaysLeft === 0) return <PremiumLockView featureName="Controle Inteligente de Estoque" requiredPlan="Intermediário" />;
 
   return (
     <div className="animate-in">
@@ -614,26 +586,25 @@ const EstoqueView = () => {
 };
 
 const AssinaturaView = () => {
-  const { isPremium, upgradeToPremium, trialDaysLeft, profile } = useAppContext();
+  const { plan, changePlan, profile } = useAppContext();
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [plans, setPlans] = useState([]);
-  const [loadingPlans, setLoadingPlans] = useState(true);
   const [cpf, setCpf] = useState('');
 
-  useEffect(() => {
-    const loadPlans = async () => {
-      const dbPlans = await fetchAllPlans();
-      if (dbPlans && dbPlans.length > 0) {
-        setPlans(dbPlans.filter(p => p.active));
-      }
-      setLoadingPlans(false);
-    };
-    loadPlans();
-  }, []);
+  const plans = [
+    { id: 'basic', name: 'Básico', price: 0, description: 'Essencial para organizar sua agenda', features: ['Agenda Online', 'Gestão de Clientes', 'Portfólio de Fotos'], active: true },
+    { id: 'intermediate', name: 'Intermediário', price: 29.90, description: 'Controle total do seu negócio', features: ['Tudo do Básico', 'Controle Financeiro', 'Gestão de Estoque'], active: true },
+    { id: 'advanced', name: 'Avançado', price: 49.90, description: 'Venda mais e multiplique seus ganhos', features: ['Tudo do Intermediário', 'Catálogo de Produtos / Loja Online'], active: true }
+  ];
 
-  const handleCheckout = async (planName, price) => {
+  const handleCheckout = async (planId, price, planName) => {
+    if (price === 0) {
+      await changePlan(planId);
+      alert(`Seu plano foi alterado para ${planName}.`);
+      return;
+    }
+
     if (!cpf || cpf.replace(/\D/g, '').length < 11) {
       setErrorMsg('Por favor, informe um CPF ou CNPJ válido.');
       return;
@@ -646,8 +617,8 @@ const AssinaturaView = () => {
       const checkoutUrl = await createPaymentLink(planName, price, name, email, cpf);
       window.open(checkoutUrl, '_blank');
       
-      alert(`A tela de pagamento do Asaas para o Plano ${planName} foi aberta!\n\nNa vida real, a conta só é liberada após o webhook do Asaas confirmar o Pix. Para testes, vamos liberar agora.`);
-      upgradeToPremium();
+      alert(`A tela de pagamento do Asaas para o Plano ${planName} foi aberta!\n\nNa vida real, a conta é liberada após o webhook do Asaas confirmar o pagamento. Para testes, vamos liberar agora.`);
+      changePlan(planId);
     } catch (err) {
       setErrorMsg(`Erro: ${err.message || 'Verifique o console.'}`);
       console.error(err);
@@ -656,84 +627,66 @@ const AssinaturaView = () => {
     }
   };
 
-  if (isPremium) return (
-    <div className="animate-in card" style={{ padding: '3rem', textAlign: 'center', background: 'linear-gradient(135deg, var(--success), #059669)', color: 'white' }}>
-      <Award size={48} color="white" style={{ margin: '0 auto 1rem' }} />
-      <h2 style={{ marginBottom: '1rem', color: 'white' }}>Assinatura Ativa! 🌟</h2>
-      <p style={{ color: 'rgba(255,255,255,0.9)', maxWidth: '500px', margin: '0 auto' }}>
-        Seu negócio está operando com poder máximo. Todos os relatórios e ferramentas estão desbloqueados.
-      </p>
-    </div>
-  );
-
   return (
     <div className="animate-in">
-      {!isPremium && (
-        <div style={{ backgroundColor: trialDaysLeft > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: trialDaysLeft > 0 ? 'var(--success)' : 'var(--danger)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', marginBottom: '2rem', border: `1px solid ${trialDaysLeft > 0 ? 'var(--success)' : 'var(--danger)'}` }}>
-          <h3 style={{ margin: 0, fontSize: '1.25rem' }}>
-            {trialDaysLeft > 0 ? `Seu Período de Teste Grátis termina em ${trialDaysLeft} dias!` : 'Seu Período de Teste Acabou!'}
-          </h3>
-          <p style={{ margin: '0.5rem 0 0', opacity: 0.9 }}>
-            {trialDaysLeft > 0 ? 'Aproveite para testar todas as funcionalidades. Assine um plano para não perder o acesso.' : 'Escolha um plano abaixo para continuar usando o aplicativo e impulsionar suas vendas.'}
-          </p>
-        </div>
-      )}
-
-      <div style={{ textAlign: 'center', marginBottom: '3rem', maxWidth: '500px', margin: '0 auto 3rem' }}>
+      <div style={{ textAlign: 'center', marginBottom: '3rem', maxWidth: '600px', margin: '0 auto 3rem' }}>
         <h2>Escolha o Plano Ideal</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Foque em fazer unhas incríveis. Nós cuidamos do resto.</p>
-        <div style={{ marginBottom: '1rem', textAlign: 'left' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Seu CPF ou CNPJ (obrigatório para cobrança)</label>
-          <input 
-            type="text" 
-            className="form-input" 
-            placeholder="Apenas números..." 
-            value={cpf} 
-            onChange={(e) => setCpf(e.target.value)} 
-          />
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Evolua seu negócio com as ferramentas certas. Seu plano atual é: <strong>{plan.toUpperCase()}</strong></p>
+        
+        <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Seu CPF ou CNPJ (Obrigatório para Upgrade)</label>
+          <input type="text" className="form-input" placeholder="000.000.000-00" value={cpf} onChange={(e) => setCpf(e.target.value)} />
         </div>
-        {errorMsg && <div style={{ color: '#ef4444', marginTop: '1rem', padding: '0.5rem', backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: '8px', display: 'inline-block' }}>{errorMsg}</div>}
+        
+        {errorMsg && <div style={{ padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: '8px', marginBottom: '1rem', textAlign: 'left' }}>{errorMsg}</div>}
       </div>
 
-      {loadingPlans ? (
-        <p style={{ textAlign: 'center' }}>Carregando planos...</p>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
-          {plans.map((plan, index) => (
-            <div key={plan.id} className="card" style={{ display: 'flex', flexDirection: 'column', border: index === 1 ? '2px solid var(--primary-color)' : '1px solid var(--border-color)', position: 'relative' }}>
-              {index === 1 && (
-                <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'var(--primary-color)', color: 'white', padding: '2px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>MAIS POPULAR</div>
-              )}
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{plan.name}</h3>
-              <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '1.5rem' }}>R$ {plan.price}<span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/{plan.billing_cycle}</span></div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {plan.features.split(',').map((feat, i) => (
-                  <li key={i} style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> {feat.trim()}</li>
-                ))}
-              </ul>
-              <button 
-                className={`btn ${index === 1 ? 'btn-primary' : 'btn-outline'}`} 
-                style={{ width: '100%', marginTop: 'auto' }}
-                onClick={() => handleCheckout(plan.name, plan.price)}
-                disabled={loading}
-              >
-                {loading ? 'Processando...' : `Assinar ${plan.name}`}
-              </button>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+        {plans.map(p => (
+          <div key={p.id} className="card" style={{ display: 'flex', flexDirection: 'column', border: plan === p.id ? '2px solid var(--primary-color)' : '1px solid var(--border-color)', position: 'relative' }}>
+            {plan === p.id && (
+              <span style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'var(--primary-color)', color: 'white', padding: '0.25rem 1rem', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                PLANO ATUAL
+              </span>
+            )}
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', marginTop: '1rem' }}>{p.name}</h3>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary-color)', marginBottom: '0.5rem' }}>
+              {p.price === 0 ? 'Grátis' : `R$ ${p.price.toFixed(2).replace('.', ',')}`}
+              {p.price > 0 && <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 'normal' }}>/mês</span>}
             </div>
-          ))}
-        </div>
-      )}
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', minHeight: '40px' }}>{p.description}</p>
+            
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', flex: 1, textAlign: 'left' }}>
+              {p.features.map((f, i) => (
+                <li key={i} style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Check size={18} color="var(--success)" />
+                  <span style={{ fontSize: '0.9rem' }}>{f}</span>
+                </li>
+              ))}
+            </ul>
+            
+            <button 
+              className={`btn ${plan === p.id ? 'btn-outline' : 'btn-primary'}`}
+              style={{ width: '100%', padding: '1rem' }}
+              disabled={loading || plan === p.id}
+              onClick={() => handleCheckout(p.id, p.price, p.name)}
+            >
+              {plan === p.id ? 'Seu Plano' : p.price === 0 ? 'Selecionar Plano' : 'Assinar Agora'}
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
 // Componente para bloquear telas de usuários grátis
-const PremiumLockView = ({ featureName }) => (
+const PremiumLockView = ({ featureName, requiredPlan }) => (
   <div className="animate-in card" style={{ padding: '4rem 2rem', textAlign: 'center', border: '2px dashed var(--border-color)' }}>
     <Award size={48} color="var(--primary-color)" style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
     <h2 style={{ marginBottom: '1rem' }}>Função Bloqueada</h2>
     <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto 2rem' }}>
-      O <strong>{featureName}</strong> é uma funcionalidade exclusiva do Plano Premium. Assine para desbloquear todo o poder do My Nails!
+      O <strong>{featureName}</strong> é uma funcionalidade exclusiva do Plano {requiredPlan}. Faça um upgrade para desbloquear todo o poder do My Nails!
     </p>
   </div>
 );
