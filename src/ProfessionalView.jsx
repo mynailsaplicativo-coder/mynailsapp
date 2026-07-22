@@ -602,6 +602,7 @@ const AssinaturaView = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [plans, setPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
+  const [cpf, setCpf] = useState('');
 
   useEffect(() => {
     const loadPlans = async () => {
@@ -615,12 +616,16 @@ const AssinaturaView = () => {
   }, []);
 
   const handleCheckout = async (planName, price) => {
+    if (!cpf || cpf.replace(/\D/g, '').length < 11) {
+      setErrorMsg('Por favor, informe um CPF ou CNPJ válido.');
+      return;
+    }
     setLoading(true);
     setErrorMsg('');
     try {
       const email = user?.primaryEmailAddress?.emailAddress || 'manicure@mynails.app.br';
       const name = user?.fullName || profile?.name || 'Manicure Profissional';
-      const checkoutUrl = await createPaymentLink(planName, price, name, email);
+      const checkoutUrl = await createPaymentLink(planName, price, name, email, cpf);
       window.open(checkoutUrl, '_blank');
       
       alert(`A tela de pagamento do Asaas para o Plano ${planName} foi aberta!\n\nNa vida real, a conta só é liberada após o webhook do Asaas confirmar o Pix. Para testes, vamos liberar agora.`);
@@ -656,9 +661,19 @@ const AssinaturaView = () => {
         </div>
       )}
 
-      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+      <div style={{ textAlign: 'center', marginBottom: '3rem', maxWidth: '500px', margin: '0 auto 3rem' }}>
         <h2>Escolha o Plano Ideal</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>Foque em fazer unhas incríveis. Nós cuidamos do resto.</p>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Foque em fazer unhas incríveis. Nós cuidamos do resto.</p>
+        <div style={{ marginBottom: '1rem', textAlign: 'left' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Seu CPF ou CNPJ (obrigatório para cobrança)</label>
+          <input 
+            type="text" 
+            className="form-input" 
+            placeholder="Apenas números..." 
+            value={cpf} 
+            onChange={(e) => setCpf(e.target.value)} 
+          />
+        </div>
         {errorMsg && <div style={{ color: '#ef4444', marginTop: '1rem', padding: '0.5rem', backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: '8px', display: 'inline-block' }}>{errorMsg}</div>}
       </div>
 
@@ -678,7 +693,14 @@ const AssinaturaView = () => {
                   <li key={i} style={{ display: 'flex', gap: '0.5rem' }}><Sparkles size={18} color="var(--success)" /> {feat.trim()}</li>
                 ))}
               </ul>
-              <button className={`btn ${index === 1 ? 'btn-primary' : 'btn-outline'}`} onClick={() => handleCheckout(plan.name, plan.price)} disabled={loading}>Assinar {plan.name}</button>
+              <button 
+                className={`btn ${index === 1 ? 'btn-primary' : 'btn-outline'}`} 
+                style={{ width: '100%', marginTop: 'auto' }}
+                onClick={() => handleCheckout(plan.name, plan.price)}
+                disabled={loading}
+              >
+                {loading ? 'Processando...' : `Assinar ${plan.name}`}
+              </button>
             </div>
           ))}
         </div>

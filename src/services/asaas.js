@@ -55,7 +55,7 @@ export const createSplitPayment = async ({ clientName, clientEmail, value, descr
 /**
  * Gera um link de assinatura mensal recorrente
  */
-export const createPaymentLink = async (planName, value, userName = 'Manicure Profissional', userEmail = 'manicure@mynails.app.br') => {
+export const createPaymentLink = async (planName, value, userName = 'Manicure Profissional', userEmail = 'manicure@mynails.app.br', cpfCnpj) => {
   try {
     const response = await fetch(`${API_BASE_URL}/asaas/create-subscription`, {
       method: 'POST',
@@ -63,6 +63,7 @@ export const createPaymentLink = async (planName, value, userName = 'Manicure Pr
       body: JSON.stringify({ 
         clientName: userName, 
         clientEmail: userEmail,
+        cpfCnpj: cpfCnpj,
         value: value, 
         description: `Assinatura Plano ${planName}` 
       })

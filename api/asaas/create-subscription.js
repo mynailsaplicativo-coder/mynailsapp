@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { clientName, clientEmail, value, description } = req.body;
+  const { clientName, clientEmail, value, description, cpfCnpj } = req.body;
   const asaasApiKey = process.env.VITE_ASAAS_API_KEY || process.env.ASAAS_API_KEY || '$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjUwYzgxNTQwLTYzMmQtNDEyYS05OWJjLTA1OTZkOTlhMzhjYTo6JGFhY2hfN2U3NjE3OTMtOWNjOC00NzA2LTgyOWEtZWZmZWI2Njk1NmMw';
 
   if (!asaasApiKey) {
@@ -49,7 +49,8 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           name: clientName,
-          email: clientEmail
+          email: clientEmail,
+          cpfCnpj: cpfCnpj
         })
       });
       
