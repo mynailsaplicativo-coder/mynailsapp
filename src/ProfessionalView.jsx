@@ -233,21 +233,36 @@ const RecebimentosView = () => {
         </div>
       )}
 
-      <form className="card" onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-        <div className="input-group" style={{ gridColumn: '1 / -1' }}><label>Nome Completo (ou Razão Social)</label><input type="text" className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} /></div>
-        <div className="input-group"><label>CPF ou CNPJ (só números)</label><input type="text" className="form-input" required value={formData.cpfCnpj} onChange={e => setFormData({...formData, cpfCnpj: e.target.value})} /></div>
-        <div className="input-group"><label>Email</label><input type="email" className="form-input" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
-        <div className="input-group"><label>Celular (só números com DDD)</label><input type="text" className="form-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
-        <div className="input-group"><label>CEP</label><input type="text" className="form-input" required value={formData.postalCode} onChange={e => setFormData({...formData, postalCode: e.target.value})} /></div>
-        <div className="input-group" style={{ gridColumn: '1 / -1' }}><label>Endereço</label><input type="text" className="form-input" required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} /></div>
-        <div className="input-group"><label>Número</label><input type="text" className="form-input" required value={formData.addressNumber} onChange={e => setFormData({...formData, addressNumber: e.target.value})} /></div>
-        <div className="input-group"><label>Bairro</label><input type="text" className="form-input" required value={formData.province} onChange={e => setFormData({...formData, province: e.target.value})} /></div>
-        <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-            {loading ? 'Criando Conta Segura...' : 'Criar Conta de Recebimentos'}
+      <div style={{ display: 'grid', gap: '2rem' }}>
+        <form className="card" onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <h3 style={{ gridColumn: '1 / -1', marginBottom: '-0.5rem' }}>Criar Nova Conta</h3>
+          <div className="input-group" style={{ gridColumn: '1 / -1' }}><label>Nome Completo (ou Razão Social)</label><input type="text" className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} /></div>
+          <div className="input-group"><label>CPF ou CNPJ (só números)</label><input type="text" className="form-input" required value={formData.cpfCnpj} onChange={e => setFormData({...formData, cpfCnpj: e.target.value})} /></div>
+          <div className="input-group"><label>Email</label><input type="email" className="form-input" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+          <div className="input-group"><label>Celular (só números com DDD)</label><input type="text" className="form-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
+          <div className="input-group"><label>CEP</label><input type="text" className="form-input" required value={formData.postalCode} onChange={e => setFormData({...formData, postalCode: e.target.value})} /></div>
+          <div className="input-group" style={{ gridColumn: '1 / -1' }}><label>Endereço</label><input type="text" className="form-input" required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} /></div>
+          <div className="input-group"><label>Número</label><input type="text" className="form-input" required value={formData.addressNumber} onChange={e => setFormData({...formData, addressNumber: e.target.value})} /></div>
+          <div className="input-group"><label>Bairro</label><input type="text" className="form-input" required value={formData.province} onChange={e => setFormData({...formData, province: e.target.value})} /></div>
+          <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+              {loading ? 'Criando Conta Segura...' : 'Criar Conta de Recebimentos'}
+            </button>
+          </div>
+        </form>
+
+        <form className="card" onSubmit={(e) => { e.preventDefault(); setWalletId(e.target.elements.walletId.value); }}>
+          <h3 style={{ marginBottom: '1rem' }}>Já possui conta no Asaas?</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Se você já tem uma conta no Asaas, insira o ID da sua Carteira (Wallet ID) abaixo para vincular sua conta existente.</p>
+          <div className="input-group">
+            <label>ID da Carteira (Wallet ID)</label>
+            <input type="text" name="walletId" className="form-input" placeholder="Ex: wal_123456789" required />
+          </div>
+          <button type="submit" className="btn btn-outline" style={{ marginTop: '1rem' }}>
+            Vincular Conta Existente
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };
