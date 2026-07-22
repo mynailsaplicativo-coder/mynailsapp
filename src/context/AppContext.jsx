@@ -5,7 +5,7 @@ import {
   fetchServices, insertService,
   fetchInventory, insertMaterial,
   fetchTransactions, insertTransaction,
-  fetchClients, insertClient,
+  fetchClients, insertClient, updateClient,
   fetchProfile, updateProfile,
   fetchPortfolio, insertPortfolio,
   fetchProducts, insertProduct, updateProduct, deleteProduct,
@@ -112,9 +112,20 @@ export const AppProvider = ({ children }) => {
   };
 
   const addClient = async (client) => {
+    if (!user) return;
     const data = await insertClient(client, user.id);
     if (data && !data.error) setClients([...clients, data]);
     else alert(`Erro ao salvar cliente: ${data?.error || 'Desconhecido'}`);
+  };
+
+  const editClient = async (clientId, updates) => {
+    if (!user) return;
+    const data = await updateClient(clientId, updates);
+    if (data && !data.error) {
+      setClients(clients.map(c => c.id === clientId ? { ...c, ...updates } : c));
+    } else {
+      alert(`Erro ao atualizar cliente: ${data?.error || 'Desconhecido'}`);
+    }
   };
 
   const addPortfolio = async (item) => {
@@ -162,7 +173,7 @@ export const AppProvider = ({ children }) => {
       services, addService,
       inventory, addMaterial,
       transactions, addTransaction,
-      clients, addClient,
+      clients, addClient, editClient,
       portfolio, addPortfolio,
       products, addProduct, editProduct, removeProduct,
       reviews, addReview,

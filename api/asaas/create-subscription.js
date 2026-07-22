@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { clientName, clientEmail, value, description, cpfCnpj } = req.body;
+  const { clientName, clientEmail, value, description, cpfCnpj, splitWalletId } = req.body;
   const asaasApiKey = process.env.VITE_ASAAS_API_KEY || process.env.ASAAS_API_KEY || '$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjUwYzgxNTQwLTYzMmQtNDEyYS05OWJjLTA1OTZkOTlhMzhjYTo6JGFhY2hfN2U3NjE3OTMtOWNjOC00NzA2LTgyOWEtZWZmZWI2Njk1NmMw';
 
   if (!asaasApiKey) {
@@ -25,10 +25,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Criar ou buscar o Customer (Manicure pagando a Plataforma)
+    // 1. Criar ou buscar o Customer
     let customerId = '';
     
-    // Busca se já existe um customer com esse email no Asaas
     const searchRes = await fetch(`https://api.asaas.com/v3/customers?email=${clientEmail}`, {
       headers: {
         'access_token': asaasApiKey,
@@ -51,7 +50,6 @@ export default async function handler(req, res) {
 
     if (searchData.data && searchData.data.length > 0) {
       customerId = searchData.data[0].id;
-      // Garante que o CPF está atualizado no cliente existente
       if (cpfCnpj) {
         await fetch(`https://api.asaas.com/v3/customers/${customerId}`, {
           method: 'POST',
@@ -63,7 +61,6 @@ export default async function handler(req, res) {
         });
       }
     } else {
-      // Cria um novo customer se não existir
       const createCustomerRes = await fetch('https://api.asaas.com/v3/customers', {
         method: 'POST',
         headers: {
@@ -84,7 +81,6 @@ export default async function handler(req, res) {
          newCustomer = { errors: [{ code: 'invalid_token', description: 'invalid token' }] };
       }
       
-      // MOCK DE SUCESSO SE A CHAVE FOR INVÁLIDA (PARA TESTES DO APLICATIVO)
       if (newCustomer.errors && (newCustomer.errors[0]?.code === 'invalid_token' || newCustomer.errors[0]?.description?.includes('invalid'))) {
          return res.status(200).json({ 
            invoiceUrl: 'https://sandbox.asaas.com/i/mocked_payment_link_para_testes'
@@ -101,11 +97,20 @@ export default async function handler(req, res) {
     const subscriptionPayload = {
       customer: customerId,
       billingType: 'PIX', // Pode ser BOLETO, CREDIT_CARD ou PIX
-      nextDueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Começa a cobrar amanhã (ou hoje se preferir)
+      nextDueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Começa a cobrar amanhã
       value: value,
       cycle: 'MONTHLY',
       description: description
     };
+
+    if (splitWalletId) {
+      subscriptionPayload.split = [
+        {
+          walletId: splitWalletId,
+          percentualValue: 100
+        }
+      ];
+    }
 
     const response = await fetch('https://api.asaas.com/v3/subscriptions', {
       method: 'POST',

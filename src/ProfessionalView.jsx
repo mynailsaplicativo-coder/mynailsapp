@@ -47,6 +47,7 @@ const ProfessionalView = () => {
         {activeTab === 'financeiro' && <FinanceiroView />}
         {activeTab === 'estoque' && <EstoqueView />}
         {activeTab === 'recebimentos' && <RecebimentosView />}
+        {activeTab === 'clubevip' && <ClubeVipView />}
         {activeTab === 'assinatura' && <AssinaturaView />}
 
         {isNewBookingOpen && <NewBookingModal onClose={() => setIsNewBookingOpen(false)} />}
@@ -85,6 +86,10 @@ const ProfessionalView = () => {
         <button className={`bottom-nav-item ${activeTab === 'recebimentos' ? 'active' : ''}`} onClick={() => setActiveTab('recebimentos')}>
           <Wallet size={22} />
           <span>Conta</span>
+        </button>
+        <button className={`bottom-nav-item ${activeTab === 'clubevip' ? 'active' : ''}`} onClick={() => setActiveTab('clubevip')}>
+          <Star size={22} />
+          <span>VIP</span>
         </button>
         <button className={`bottom-nav-item ${activeTab === 'assinatura' ? 'active' : ''}`} onClick={() => setActiveTab('assinatura')}>
           <Award size={22} />
@@ -314,8 +319,9 @@ const ClientesView = () => {
                 <tr>
                   <th style={{ padding: '1rem' }}>Nome</th>
                   <th style={{ padding: '1rem' }}>Telefone</th>
-                  <th style={{ padding: '1rem' }}>Último Serviço</th>
+                  <th style={{ padding: '1rem' }}>VIP</th>
                   <th style={{ padding: '1rem' }}>Data da Volta</th>
+                  <th style={{ padding: '1rem' }}>Ações VIP</th>
                 </tr>
               </thead>
               <tbody>
@@ -323,12 +329,33 @@ const ClientesView = () => {
                   <tr key={c.id} style={{ borderTop: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '1rem', fontWeight: 500 }}>{c.name}</td>
                     <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{c.phone}</td>
-                    <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{c.lastService || '-'}</td>
+                    <td style={{ padding: '1rem' }}>
+                      {c.is_vip ? (
+                        <span className="badge badge-primary" style={{ backgroundColor: 'var(--primary-color)' }}>VIP ({c.vip_sessions_left || 0} idas)</span>
+                      ) : (
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Não</span>
+                      )}
+                    </td>
                     <td style={{ padding: '1rem' }}>
                       {c.return_date ? (
-                        <span className="badge badge-primary">{new Date(c.return_date).toLocaleDateString()}</span>
+                        <span className="badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>{new Date(c.return_date).toLocaleDateString()}</span>
                       ) : (
                         <span style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>Não agendado</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '1rem' }}>
+                      {c.is_vip && c.vip_sessions_left > 0 && (
+                        <button 
+                          className="btn btn-outline" 
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}
+                          onClick={() => {
+                            if(window.confirm('Abater 1 ida deste cliente?')) {
+                              editClient(c.id, { vip_sessions_left: c.vip_sessions_left - 1 });
+                            }
+                          }}
+                        >
+                          Usar 1 Ida
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -676,6 +703,69 @@ const AssinaturaView = () => {
           </div>
         ))}
       </div>
+    </div>
+  );
+};
+
+const ClubeVipView = () => {
+  const { profile, editProfile, plan, trialDaysLeft } = useAppContext();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    vip_active: profile?.vip_active || false,
+    vip_title: profile?.vip_title || 'Clube VIP',
+    vip_price: profile?.vip_price || '',
+    vip_rules: profile?.vip_rules || ''
+  });
+
+  if (plan !== 'advanced' && trialDaysLeft === 0) return <PremiumLockView featureName="Clube VIP para Clientes" requiredPlan="Avançado" />;
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await editProfile(formData);
+      alert('Clube VIP configurado com sucesso!');
+    } catch (err) {
+      alert('Erro ao salvar.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="animate-in card" style={{ padding: '2rem' }}>
+      <h2>Configuração do Clube VIP</h2>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Crie um clube de assinaturas para suas clientes e garanta receita recorrente todos os meses.</p>
+      
+      <form onSubmit={handleSave} style={{ display: 'grid', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', backgroundColor: formData.vip_active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
+          <label className="switch" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input type="checkbox" checked={formData.vip_active} onChange={e => setFormData({...formData, vip_active: e.target.checked})} style={{ width: '24px', height: '24px' }} />
+            <strong style={{ color: formData.vip_active ? 'var(--success)' : 'var(--danger)' }}>
+              {formData.vip_active ? 'Clube VIP Ativo - Clientes podem assinar' : 'Clube VIP Desativado'}
+            </strong>
+          </label>
+        </div>
+
+        <div className="input-group">
+          <label>Nome do seu Clube VIP</label>
+          <input type="text" className="form-input" value={formData.vip_title} onChange={e => setFormData({...formData, vip_title: e.target.value})} placeholder="Ex: Clube Unhas Perfeitas" required />
+        </div>
+
+        <div className="input-group">
+          <label>Valor Mensal (R$)</label>
+          <input type="number" step="0.01" className="form-input" value={formData.vip_price} onChange={e => setFormData({...formData, vip_price: e.target.value})} placeholder="Ex: 150.00" required />
+        </div>
+
+        <div className="input-group">
+          <label>Regras e Benefícios (Ficará visível para a cliente)</label>
+          <textarea className="form-input" rows="4" value={formData.vip_rules} onChange={e => setFormData({...formData, vip_rules: e.target.value})} placeholder="Ex: Pague 3 e ganhe 4 idas. Direito a 4 manutenções no mês + 1 SPA dos Pés de brinde." required></textarea>
+        </div>
+
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? 'Salvando...' : 'Salvar Configurações do Clube VIP'}
+        </button>
+      </form>
     </div>
   );
 };

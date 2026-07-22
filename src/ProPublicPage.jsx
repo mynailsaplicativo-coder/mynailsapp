@@ -165,6 +165,9 @@ Origem: Agendou pelo Link Público.`;
             {/* Nav Tabs */}
             <div style={{ display: 'flex', overflowX: 'auto', gap: '0.5rem', marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-color)', scrollbarWidth: 'none' }}>
               <button className={`btn ${activeTab === 'servicos' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('servicos')} style={{ whiteSpace: 'nowrap', borderRadius: '20px', padding: '0.5rem 1rem' }}><Scissors size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'4px'}}/> Serviços</button>
+              {pro.vip_active && (
+                <button className={`btn ${activeTab === 'clubevip' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('clubevip')} style={{ whiteSpace: 'nowrap', borderRadius: '20px', padding: '0.5rem 1rem' }}><Star size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'4px'}}/> {pro.vip_title || 'Clube VIP'}</button>
+              )}
               <button className={`btn ${activeTab === 'portfolio' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('portfolio')} style={{ whiteSpace: 'nowrap', borderRadius: '20px', padding: '0.5rem 1rem' }}><Image size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'4px'}}/> Portfólio</button>
               <button className={`btn ${activeTab === 'loja' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('loja')} style={{ whiteSpace: 'nowrap', borderRadius: '20px', padding: '0.5rem 1rem' }}><ShoppingBag size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'4px'}}/> Loja</button>
               <button className={`btn ${activeTab === 'avaliacoes' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('avaliacoes')} style={{ whiteSpace: 'nowrap', borderRadius: '20px', padding: '0.5rem 1rem' }}><Star size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'4px'}}/> Avaliações</button>
@@ -233,13 +236,70 @@ Origem: Agendou pelo Link Público.`;
                   <div key={rev.id} className="card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <div style={{ fontWeight: 600 }}>{rev.client_name}</div>
-                      <div style={{ display: 'flex', color: '#FFD700' }}>
-                        {[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < rev.rating ? '#FFD700' : 'none'} stroke={i < rev.rating ? '#FFD700' : 'var(--text-secondary)'} />)}
+                      <div style={{ display: 'flex', gap: '2px' }}>
+                        {[...Array(rev.rating)].map((_, i) => <Star key={i} size={14} fill="var(--warning)" color="var(--warning)" />)}
                       </div>
                     </div>
-                    <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem' }}>"{rev.comment}"</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{rev.comment}</p>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {activeTab === 'clubevip' && pro.vip_active && (
+              <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem', border: '2px solid var(--primary-color)' }}>
+                <Star size={48} fill="var(--warning)" color="var(--warning)" style={{ margin: '0 auto 1rem' }} />
+                <h2 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>{pro.vip_title}</h2>
+                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+                  R$ {pro.vip_price} <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 'normal' }}>/mês</span>
+                </div>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', whiteSpace: 'pre-wrap' }}>
+                  {pro.vip_rules}
+                </p>
+                <div style={{ padding: '1.5rem', backgroundColor: 'var(--bg-color)', borderRadius: '12px', textAlign: 'left', marginBottom: '2rem' }}>
+                  <h4 style={{ marginBottom: '1rem' }}>Informações para Assinar</h4>
+                  <div className="input-group">
+                    <label>Seu CPF (obrigatório)</label>
+                    <input type="text" id="vip_cpf" className="form-input" placeholder="000.000.000-00" />
+                  </div>
+                  <div className="input-group">
+                    <label>Seu Email</label>
+                    <input type="email" id="vip_email" className="form-input" placeholder="seu@email.com" defaultValue={user?.primaryEmailAddress?.emailAddress || ''} />
+                  </div>
+                </div>
+                <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }} onClick={async () => {
+                  const cpf = document.getElementById('vip_cpf').value;
+                  const email = document.getElementById('vip_email').value;
+                  if(!cpf) return alert('Por favor, informe seu CPF');
+                  try {
+                    setIsProcessing(true);
+                    const invoiceUrl = await createSplitPayment({
+                      clientName: user?.fullName || 'Cliente VIP',
+                      clientEmail: email,
+                      value: pro.vip_price,
+                      description: `Assinatura ${pro.vip_title}`,
+                      splitWalletId: pro.wallet_id // Assinaturas mensais para a carteira dela
+                    });
+                    
+                    // Simula assinatura: Cria/Atualiza cliente como VIP
+                    await insertClient({
+                      name: user?.fullName || 'Cliente VIP',
+                      phone: '999999999', // mock
+                      is_vip: true,
+                      vip_sessions_left: 4, // Supondo 4, a manicure vai poder editar
+                      notes: `Assinante do ${pro.vip_title}`
+                    }, pro.id);
+
+                    window.open(invoiceUrl, '_blank');
+                    alert('Pagamento aberto! Você agora é VIP na nossa simulação.');
+                  } catch (e) {
+                    alert('Erro ao assinar: ' + e.message);
+                  } finally {
+                    setIsProcessing(false);
+                  }
+                }}>
+                  {isProcessing ? 'Processando...' : 'Assinar e Virar VIP'}
+                </button>
               </div>
             )}
           </div>

@@ -145,10 +145,19 @@ export const insertClient = async (client, userId) => {
     name: client.name,
     phone: client.phone,
     frequency: client.frequency || null,
-    notes: client.notes || null
+    notes: client.notes || null,
+    is_vip: client.is_vip || false,
+    vip_sessions_left: client.vip_sessions_left || 0
   };
   const { data, error } = await supabase.from('clients').insert([validData]).select();
   if (error) { console.error('Erro no cliente:', error); return { error: error.message }; }
+  return data[0];
+};
+
+export const updateClient = async (clientId, updates) => {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('clients').update(updates).eq('id', clientId).select();
+  if (error) { console.error('Erro ao atualizar cliente:', error); return { error: error.message }; }
   return data[0];
 };
 
