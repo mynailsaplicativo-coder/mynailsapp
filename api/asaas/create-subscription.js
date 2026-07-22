@@ -51,6 +51,17 @@ export default async function handler(req, res) {
 
     if (searchData.data && searchData.data.length > 0) {
       customerId = searchData.data[0].id;
+      // Garante que o CPF está atualizado no cliente existente
+      if (cpfCnpj) {
+        await fetch(`https://api.asaas.com/v3/customers/${customerId}`, {
+          method: 'POST',
+          headers: {
+            'access_token': asaasApiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ cpfCnpj })
+        });
+      }
     } else {
       // Cria um novo customer se não existir
       const createCustomerRes = await fetch('https://api.asaas.com/v3/customers', {
