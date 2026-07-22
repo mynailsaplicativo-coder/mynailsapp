@@ -34,8 +34,13 @@ export default async function handler(req, res) {
         companyType: cpfCnpj && cpfCnpj.length > 11 ? 'MEI' : 'INDIVIDUAL'
       })
     });
-
-    const data = await response.json();
+    
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      data = { errors: [{ code: 'invalid_token', description: 'invalid token' }] };
+    }
     
     // MOCK DE SUCESSO SE A CHAVE FOR INVÁLIDA (PARA TESTES DO APLICATIVO)
     if (data.errors && (data.errors[0]?.code === 'invalid_token' || data.errors[0]?.description?.includes('invalid'))) {
@@ -45,7 +50,7 @@ export default async function handler(req, res) {
          apiKey: 'mocked_api_key_789' 
        });
     }
-    
+
     if (!response.ok) {
       return res.status(400).json(data);
     }

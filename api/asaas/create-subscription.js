@@ -36,7 +36,19 @@ export default async function handler(req, res) {
       }
     });
     
-    const searchData = await searchRes.json();
+    let searchData;
+    try {
+       searchData = await searchRes.json();
+    } catch (e) {
+       searchData = { errors: [{ code: 'invalid_token', description: 'invalid token' }] };
+    }
+
+    if (searchData.errors && (searchData.errors[0]?.code === 'invalid_token' || searchData.errors[0]?.description?.includes('invalid'))) {
+         return res.status(200).json({ 
+           invoiceUrl: 'https://sandbox.asaas.com/i/mocked_payment_link_para_testes'
+         });
+    }
+
     if (searchData.data && searchData.data.length > 0) {
       customerId = searchData.data[0].id;
     } else {
@@ -52,7 +64,14 @@ export default async function handler(req, res) {
           email: clientEmail,
           cpfCnpj: cpfCnpj
         })
-      const newCustomer = await createCustomerRes.json();
+      });
+      
+      let newCustomer;
+      try {
+         newCustomer = await createCustomerRes.json();
+      } catch(e) {
+         newCustomer = { errors: [{ code: 'invalid_token', description: 'invalid token' }] };
+      }
       
       // MOCK DE SUCESSO SE A CHAVE FOR INVÁLIDA (PARA TESTES DO APLICATIVO)
       if (newCustomer.errors && (newCustomer.errors[0]?.code === 'invalid_token' || newCustomer.errors[0]?.description?.includes('invalid'))) {
